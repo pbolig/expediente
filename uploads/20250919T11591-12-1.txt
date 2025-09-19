@@ -1,0 +1,24 @@
+## Actualización Formularios normativos Tesin 20251009
+
+NOTA: Por resolución normativa se debe actualizar los archivos en ambientes TEST y PRODUCCION.
+
+Ruta con archivos: \\NBSF000FSS01\Pases_PreProd_Files\Tesin\Formularios\CE-ORP-TRA-A001\20250903
+
+Actualizar el formulario adjunto. (Solo debe quedar este que está adjunto - poner el bk en una carpeta de nivel superior):
+
+Sector ejecutante: Administradores de Aplicación.
+
+ACLARACIÓN: El servicio de plantillado pasó a DMZ deben ser los mismos en ambas rutas, tesin11web y servipdf
+
+Ejemplo en ambiente test, realizar lo mismo en las rutas productivas:
+
+\\bsfdmztmc1t\e$\Xampp\htdocs\servipdf\descarga_salida\pdf_entradas
+Los archivos tienen que ser los mismos en ambas rutas
+\\BSFDMZTMC1T\e$\Apache Software Foundation\Tomcat 9.0\webapps\tesin11web\Formularios
+
+Referencia por cambio de nombre: 
+
+Nomenclatura Anterior: EXTE-58    Nueva Nomenclatura: CE-TRAN001
+Nomenclatura Anterior: EXTE-59  Nueva Nomenclatura: CE-ORPA001
+
+Ticket Jira con la solicitud: https://jira.gbsj.com.ar/browse/TESIN-280

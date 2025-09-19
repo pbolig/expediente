@@ -1,0 +1,39 @@
+## Actualización Tesin Modulo_Web_TsnComexCore_20250707
+
+Se necesita instalar actualización TESTIN V11 en Test (módulo web).
+
+Los srv agendados son:
+
+	Web y TSNService: \\BSFCCPTSNWP1
+	Base de datos: \\BSFCCPSQLW02 --> DB's Tesin11, Tesin11GAM, Tesin11L
+
+OBS1: TOMAR BK PREVIO DE LA BASE DE DATOS Tesin11, Tesin11GAM, Tesin11L
+OBS2: Leer instructivo en el directorio:
+	01-Modulo_Web_TsnComexCore_20250707.zip\20250707.1\Web\Doc
+		--> Configuracion Autenticacion OTP en Modulo Web Tesin11.pdf
+		--> Diseño Tecnico Invocacion API Tesin11api.pdf
+		--> Update Modulo Web Tesin11.pdf
+
+Ruta de la implementación: \\NBSF000FSS01\Pases_PreProd_Files\Tesin\Modulo_Web_TsnComexCore\Modulo_Web_TsnComexCore_20250707
+
+archivos:
+	--> 01-Modulo_Web_TsnComexCore_20250707.zip
+	--> 02-Modulo_Web_TsnComexCore_20250707_UPD.zip
+	
+Paso 1:
+	--> Implementar primer archivo
+			Administradores de Aplicaciones: 01-Modulo_Web_TsnComexCore_20250707.zip\20250707.1\Web (api y web: war)
+			Administradores de base de datos: 01-Modulo_Web_TsnComexCore_20250707.zip\20250707.1\Web\Scripts (scripts en la carpeta .\Tesin11GAM)
+
+Paso 2:
+	--> Implementar segundo archivo
+		Administradores de Aplicaciones: 02-Modulo_Web_TsnComexCore_20250707_UPD.zip
+			Actaulizar el archivo Modulo_Web_TsnComexCore_20250707_UPD.class (previo bk si ya existe y verificar que tambien esté implementado en test)
+
+Nota: Por favor, luego de la implementación les pido que me pasen la versión de api que haya quedado.
+
+
+https://mimesadeayuda.gbsj.com.ar/requests/show/index/id/552621
+
+Saludos
+Pedro
