@@ -1,20 +1,25 @@
+/* Estilos Generales */
 body {
-    font-family: sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    background-color: #f4f7f6;
     color: #333;
+    line-height: 1.6;
 }
 
 header {
     background-color: #005A9C;
     color: white;
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 main {
     padding: 1rem;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 section {
@@ -22,16 +27,91 @@ section {
     padding: 1.5rem;
     margin-bottom: 1rem;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #e0e0e0;
 }
 
-h2 {
+h2, h3 {
     color: #005A9C;
-    border-bottom: 2px solid #005A9C;
+    border-bottom: 2px solid #eef2f5;
     padding-bottom: 0.5rem;
     margin-top: 0;
 }
 
+/* --- NUEVO: Estilos de Botones Unificados --- */
+/* Clase base para todos los botones */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+
+.btn2 {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Botón Primario (acciones principales como Guardar) */
+.btn-primary {
+    background-color: #007BFF;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Botón Secundario (acciones alternativas como Cancelar) */
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Botón de Contorno (acciones menos importantes) */
+.btn-outline {
+    background-color: transparent;
+    color: #007BFF;
+    border: 2px solid #007BFF;
+}
+.btn-outline:hover {
+    background-color: #007BFF;
+    color: white;
+}
+
+/* Para que un botón ocupe todo el ancho */
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+
+/* Formularios */
 form label {
     display: block;
     margin-top: 1rem;
@@ -46,178 +126,134 @@ form select {
     padding: 0.75rem;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; /* Para que el padding no afecte el ancho total */
+    box-sizing: border-box;
 }
 
-#btn-tomar-foto, #btn-guardar {
-    display: block;
-    width: 100%;
-    padding: 1rem;
-    margin-top: 1rem;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
+/* Contenedor de búsqueda */
+#formulario-busqueda {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+#formulario-busqueda input {
+    flex-grow: 1; /* El input ocupa el espacio disponible */
 }
 
-#btn-tomar-foto:hover, #btn-guardar:hover {
-    background-color: #0056b3;
-}
-
-#fotos-previsualizacion {
+/* Previsualización de archivos */
+#fotos-previsualizacion, #fotos-previsualizacion-edicion {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 1rem;
-}
-
-#fotos-previsualizacion img {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-/* Estilos para el modal */
-.modal {
-    display: none; /* Oculto por defecto */
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.8);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.close-btn {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close-btn:hover,
-.close-btn:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-#fotos-modal-body {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-#fotos-modal-body img {
-    max-width: 100%;
-    height: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
 }
 
 .previsualizacion-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    position: relative;
     width: 100px;
     height: 100px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    padding: 5px;
-    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     overflow: hidden;
 }
-
+.previsualizacion-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.btn-eliminar-preview {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    line-height: 20px;
+    font-size: 12px;
+    padding: 0;
+}
 .previsualizacion-item .file-icon {
     font-size: 40px;
-    line-height: 1;
-    margin-bottom: 5px;
 }
 
+/* --- NUEVO: Estilos para el Acordeón --- */
+.accordion-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none; /* Evita que el texto se seleccione al hacer click */
+    border-bottom: 2px solid #005A9C;
+}
+
+.accordion-icon {
+    font-size: 1.5rem;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+/* Gira el ícono cuando el acordeón está activo */
+.accordion-header.active .accordion-icon {
+    transform: rotate(45deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+    padding: 0 1rem; /* Añade padding para que no se pegue a los bordes */
+}
+
+
+/* Grilla de Acontecimientos */
 .acontecimiento-item {
-    border: 1px solid #ddd;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 15px;
-    background: #f9f9f9;
+    background: #fdfdfd;
 }
-
 .acontecimiento-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
 }
+.acontecimiento-header h4 { margin: 0; }
+.fecha { color: #666; font-size: 0.9em; }
 
-.acontecimiento-header h4 {
-    margin: 0;
-    color: #333;
+/* Modal */
+.modal {
+    display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+    width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8);
 }
-
-.fecha {
-    color: #666;
-    font-size: 0.9em;
+.modal-content {
+    background-color: #fefefe; margin: 10% auto; padding: 20px;
+    border: 1px solid #888; width: 80%; max-width: 700px; border-radius: 8px;
 }
-
-.acontecimiento-actions {
-    margin-top: 10px;
-    display: flex;
-    gap: 10px;
+.close-btn {
+    color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;
 }
-
-.pagination-controls {
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-    margin: 20px 0;
+#fotos-modal-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
 }
-
-.btn-paginacion {
-    padding: 8px 12px;
+.contenedor-archivo {
+    text-align: center;
+    word-break: break-all;
+}
+.contenedor-archivo img {
+    max-width: 100%;
+    height: auto;
     border: 1px solid #ddd;
-    background: white;
-    cursor: pointer;
+    border-radius: 4px;
 }
-
-.btn-paginacion.active {
-    background: #007bff;
-    color: white;
-}
-
-.pagination-info {
-    text-align: center;
-    color: #666;
-    margin-top: 10px;
-}
-
-.error-message {
-    text-align: center;
-    color: red;
-    padding: 20px;
-}
-
-.no-data {
-    text-align: center;
-    color: #666;
-    padding: 20px;
-}
+.contenedor-archivo .file-icon { font-size: 50px; }

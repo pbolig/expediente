@@ -26,14 +26,14 @@
 
                 <label>Documentación:</label>
                 <div id="fotos-container">
-                    <button type="button" id="btn-tomar-foto">Adjuntar Archivo</button>
+                    <button type="button" id="btn-tomar-foto" class="btn btn-outline btn-block">Adjuntar Archivo</button>
                     <input type="file" id="input-foto" multiple style="display: none;">
                 </div>
 
                 <div id="fotos-previsualizacion">
                     </div>
 
-                <button type="submit" id="btn-guardar">Guardar Expediente</button>
+                <button type="submit" id="btn-guardar" class="btn btn-primary btn-block">Guardar Expediente</button>
             </form>
         </section>
 
@@ -42,7 +42,7 @@
             <form id="formulario-busqueda">
                 <label for="campo-busqueda">Buscar:</label>
                 <input type="text" id="campo-busqueda" placeholder="Nro. Expediente, descripción o tipo de trámite">
-                <button type="submit">Buscar</button>
+                <button type="submit" class="btn btn-primary">Buscar</button>
             </form>
 
             <div id="resultados-busqueda"></div>
@@ -60,37 +60,72 @@
 
             <hr>
 
+            <!--
             <h3>Agregar Nuevo Acontecimiento</h3>
-            <form id="formulario-edicion">
-                <input type="hidden" id="expediente-id-edicion">
-                
-                <label for="descripcion-edicion">Agregar descripción del acontecimiento:</label>
-                <textarea id="descripcion-edicion" rows="3" placeholder="Descripción de lo realizado" required></textarea>
+                <div class="accordion">
+                    <h3 class="accordion-header">
+                        Agregar Nuevo Acontecimiento
+                        <span class="accordion-icon">+</span>
+                    </h3>
+                <div class="accordion-content">
+                    <form id="formulario-edicion">
+                        <input type="hidden" id="expediente-id-edicion">
+                        
+                        <label for="descripcion-edicion">Agregar descripción del acontecimiento:</label>
+                        <textarea id="descripcion-edicion" rows="3" placeholder="Descripción de lo realizado" required></textarea>
 
-                <label>Documentación Adicional:</label>
-                <div id="fotos-container-edicion">
-                    <button type="button" id="btn-adjuntar-edicion">Adjuntar Archivo</button>
-                    <input type="file" id="input-foto-edicion" multiple style="display: none;">
+                        <label>Documentación Adicional:</label>
+                        <div id="fotos-container-edicion">
+                            <button type="button" id="btn-adjuntar-edicion" class="btn btn-outline">Adjuntar Archivo</button>
+                            <input type="file" id="input-foto-edicion" multiple style="display: none;">
+                        </div>
+
+                        <div id="fotos-previsualizacion-edicion"></div>
+                        
+                        <label for="estado-edicion">Cambiar Estado:</label>
+                        <select id="estado-edicion">
+                            <option value="en-espera">En Espera</option>
+                            <option value="iniciado">Iniciado</option>
+                            <option value="finalizado">Finalizado</option>
+                        </select>
+
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <button type="button" id="btn-cancelar-edicion" class="btn btn-secondary">Cancelar</button>
+                    </form>
                 </div>
+            -->
 
-                <div id="fotos-previsualizacion-edicion"></div>
-                
-                <label for="estado-edicion">Cambiar Estado:</label>
-                <select id="estado-edicion">
-                    <option value="en-espera">En Espera</option>
-                    <option value="iniciado">Iniciado</option>
-                    <option value="finalizado">Finalizado</option>
-                </select>
+            <div class="accordion">
+                    <h3 class="accordion-header">
+                        Agregar Nuevo Acontecimiento
+                        <span class="accordion-icon">+</span>
+                    </h3>
+                <div class="accordion-content">
+                    <form id="formulario-edicion">
+                        <input type="hidden" id="expediente-id-edicion">
+                        
+                        <label for="descripcion-edicion">Agregar descripción del acontecimiento:</label>
+                        <textarea id="descripcion-edicion" rows="3" placeholder="Descripción de lo realizado" required></textarea>
 
-                <button type="submit">Guardar Cambios</button>
-                <button type="button" id="btn-cancelar-edicion">Cancelar</button>
-            </form>
+                        <label>Documentación Adicional:</label>
+                        <div id="fotos-container-edicion">
+                            <button type="button" id="btn-adjuntar-edicion" class="btn btn-outline">Adjuntar Archivo</button>
+                            <input type="file" id="input-foto-edicion" multiple style="display: none;">
+                        </div>
 
-            <h3>Historial de Acontecimientos</h3>
-                <div id="grilla-acontecimientos">
-                    </div>
-                <div id="paginacion-acontecimientos" class="paginacion">
-                    </div>
+                        <div id="fotos-previsualizacion-edicion"></div>
+                        
+                        <label for="estado-edicion">Cambiar Estado:</label>
+                        <select id="estado-edicion">
+                            <option value="en-espera">En Espera</option>
+                            <option value="iniciado">Iniciado</option>
+                            <option value="finalizado">Finalizado</option>
+                        </select>
+
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <button type="button" id="btn-cancelar-edicion" class="btn btn-secondary">Cancelar</button>
+                    </form>
+                </div>
         </section>
 
     </main>

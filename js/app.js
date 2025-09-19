@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAdjuntarEdicion = document.getElementById('btn-adjuntar-edicion');
     const btnCancelarEdicion = document.getElementById('btn-cancelar-edicion');
     const paginacionAcontecimientos = document.getElementById('paginacion-acontecimientos');
+    const accordionHeader = document.querySelector('.accordion-header');
     
     // Referencias a la grilla de acontecimientos
     const grillaAcontecimientos = document.getElementById('grilla-acontecimientos');
@@ -85,6 +86,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const extension = nombreArchivo.split('.').pop().toLowerCase();
         return extensionesImagen.includes(extension) || tipoMime.startsWith('image/');
     };
+
+    // --- Lógica para el Acordeón ---    
+    if (accordionHeader) {
+        accordionHeader.addEventListener('click', () => {
+            // Alterna la clase 'active' en el header
+            accordionHeader.classList.toggle('active');
+            
+            const accordionContent = accordionHeader.nextElementSibling;
+            const accordionIcon = accordionHeader.querySelector('.accordion-icon');
+
+            if (accordionContent.style.maxHeight) {
+                // Si ya está abierto, lo cerramos
+                accordionContent.style.maxHeight = null;
+                accordionIcon.textContent = '+';
+            } else {
+                // Si está cerrado, lo abrimos
+                // scrollHeight nos da la altura total del contenido
+                accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
+                accordionIcon.textContent = '×'; // Cambia a una 'x' de cierre
+            }
+        });
+    }
 
     // Función para forzar la descarga de un archivo
     const descargarArchivo = async (nombreArchivo, expedienteId, acontecimientoId) => {
@@ -164,13 +187,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p><strong>Descripción:</strong> ${expediente.descripcion}</p>
                 <p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p>
                 <p><strong>Estado:</strong> ${expediente.estado}</p>
-                <button class="btn-ver-acontecimientos" data-expediente-id="${expediente.id}">Ver Acontecimientos</button>
+                <button class="btn2" data-expediente-id="${expediente.id}">Ver Acontecimientos</button>
             `;
             resultadosBusqueda.appendChild(expedienteDiv);
         });
     };
 
-    // Obtiene y muestra los acontecimientos de un expediente
     // Obtiene y muestra los acontecimientos de un expediente
     const mostrarAcontecimientos = async (expedienteId, page = 1) => {
         try {
@@ -215,13 +237,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p><strong>Estado:</strong> ${acontecimiento.nuevo_estado || 'Sin estado'}</p>
                     </div>
                     <div class="acontecimiento-actions">
-                        <button class="btn-ver-fotos-acontecimiento" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">
+                        <button class="btn" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">
                             📁 Ver Archivos
                         </button>
-                        <button class="btn-editar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}">
+                        <button class="btn" data-acontecimiento-id="${acontecimiento.id}">
                             ✏️ Editar
                         </button>
-                        <button class="btn-eliminar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}">
+                        <button class="btn" data-acontecimiento-id="${acontecimiento.id}">
                             🗑️ Eliminar
                         </button>
                     </div>
@@ -507,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="nombre-archivo">${archivo.nombre_archivo}</span>
                             <span class="tipo-archivo">${extension}</span>
                         </div>
-                        <button class="btn-descargar-archivo" onclick="descargarArchivo('${archivo.nombre_archivo}', '${expedienteId}', '${acontecimientoId}')">
+                        <button class="btn" onclick="descargarArchivo('${archivo.nombre_archivo}', '${expedienteId}', '${acontecimientoId}')">
                             ⬇️ Descargar
                         </button>
                     </div>
@@ -590,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Delega los clics en el contenedor de resultados de búsqueda
     resultadosBusqueda.addEventListener('click', async (event) => {
-        if (event.target.classList.contains('btn-ver-acontecimientos')) {
+        if (event.target.classList.contains('btn2')) {
             const expedienteId = event.target.dataset.expedienteId;
             panelConsulta.style.display = 'none';
             panelEdicion.style.display = 'block';
