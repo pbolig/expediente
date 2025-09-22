@@ -92,6 +92,7 @@ app.post('/api/tramites', upload.any(), async (req, res) => {
     }
 });
 
+/*
 app.get('/api/tramites', async (req, res) => {
     const conn = await pool.getConnection();
     try {
@@ -121,6 +122,64 @@ app.get('/api/tramites', async (req, res) => {
 
         const [rows] = await conn.execute(query, params);
         res.status(200).json(rows);
+    } catch (error) {
+        console.error('Error al buscar expedientes:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    } finally {
+        conn.release();
+    }
+});
+*/
+
+app.get('/api/tramites', async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+        const { busqueda, page = 1 } = req.query;
+        const limit = 5; // O el número de resultados que quieras por página
+        const offset = (parseInt(page, 10) - 1) * limit;
+
+        let whereClause = '';
+        const params = [];
+
+        if (busqueda) {
+            whereClause = `WHERE e.numero_expediente LIKE ? OR e.descripcion LIKE ? OR t.nombre LIKE ?`;
+            const termino = `%${busqueda}%`;
+            params.push(termino, termino, termino);
+        }
+
+        // Query para contar el total de resultados
+        const countQuery = `
+            SELECT COUNT(e.id) as total 
+            FROM expedientes e 
+            INNER JOIN tipos_tramite t ON e.tipo_tramite_id = t.id 
+            ${whereClause}
+        `;
+        const [countRows] = await conn.execute(countQuery, params);
+        const totalExpedientes = countRows[0].total;
+        const totalPages = Math.ceil(totalExpedientes / limit);
+
+        // Query para obtener los resultados de la página actual
+        const dataQuery = `
+            SELECT 
+                e.id, e.numero_expediente, e.fecha_creacion, 
+                e.descripcion, e.estado, t.nombre as tipo_tramite_nombre
+            FROM expedientes e
+            INNER JOIN tipos_tramite t ON e.tipo_tramite_id = t.id
+            ${whereClause}
+            ORDER BY e.fecha_creacion DESC
+            LIMIT ? OFFSET ?
+        `;
+        
+        // Añadimos los parámetros de paginación al final
+        params.push(limit, offset);
+        const [rows] = await conn.execute(dataQuery, params);
+
+        res.status(200).json({
+            expedientes: rows,
+            total_pages: totalPages,
+            current_page: parseInt(page, 10)
+        });
+
     } catch (error) {
         console.error('Error al buscar expedientes:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });

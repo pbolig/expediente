@@ -257,3 +257,81 @@ form select {
     border-radius: 4px;
 }
 .contenedor-archivo .file-icon { font-size: 50px; }
+
+/* --- AJUSTES PARA LA GALERÍA DE IMÁGENES EN EL MODAL --- */
+
+/* 1. Define la grilla para las imágenes */
+.galeria-imagenes {
+    display: grid;
+    /* Crea columnas automáticas de mínimo 150px que se ajustan al espacio */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px; /* Espacio entre las imágenes */
+    width: 100%;
+}
+
+/* 2. Da estilo al contenedor de cada imagen */
+.contenedor-imagen {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden; /* ¡Clave! Evita que la imagen se desborde */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column; /* Coloca la info debajo de la imagen */
+    background-color: #fff;
+}
+
+/* 3. La regla más importante: ajusta la imagen */
+.contenedor-imagen img {
+    width: 100%; /* La imagen ocupa el 100% del ancho de su contenedor */
+    height: 120px; /* Damos una altura fija para que todas se vean iguales */
+    object-fit: cover; /* La imagen cubre el espacio sin deformarse. Mágico. */
+    display: block; /* Elimina espacios extra debajo de la imagen */
+}
+
+/* 4. Mejora la apariencia de la info debajo de la imagen */
+.info-archivo {
+    padding: 8px;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.nombre-archivo {
+    display: block; /* Asegura que ocupe su propia línea */
+    white-space: nowrap; /* Evita que el texto se parta en dos líneas */
+    overflow: hidden; /* Oculta el texto que no cabe */
+    text-overflow: ellipsis; /* Agrega "..." al final si el texto es muy largo */
+    margin-bottom: 5px;
+}
+
+.btn-descargar-archivo {
+    background: transparent;
+    border: 1px solid #007BFF;
+    color: #007BFF;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.btn-descargar-archivo:hover {
+    background: #007BFF;
+    color: white;
+}
+
+/* Estilos para el encabezado del panel */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eef2f5;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+    border-bottom: none; /* Le quitamos el borde individual al h2 */
+    padding-bottom: 0;
+    margin: 0; /* Le quitamos el margen por defecto */
+}

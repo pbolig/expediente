@@ -46,10 +46,15 @@
             </form>
 
             <div id="resultados-busqueda"></div>
+            <div id="paginacion-busqueda" class="paginacion"></div>
         </section>
 
         <section id="panel-edicion" style="display: none;">
-            <h2>Detalles del Expediente</h2>
+            
+            <div class="panel-header">
+                <h2>Detalles del Expediente</h2>
+                <button id="btn-volver-busqueda" class="btn btn-secondary">← Volver</button>
+            </div>
 
             <div id="info-expediente-general">
                 </div>
@@ -59,41 +64,6 @@
                 </div>
 
             <hr>
-
-            <!--
-            <h3>Agregar Nuevo Acontecimiento</h3>
-                <div class="accordion">
-                    <h3 class="accordion-header">
-                        Agregar Nuevo Acontecimiento
-                        <span class="accordion-icon">+</span>
-                    </h3>
-                <div class="accordion-content">
-                    <form id="formulario-edicion">
-                        <input type="hidden" id="expediente-id-edicion">
-                        
-                        <label for="descripcion-edicion">Agregar descripción del acontecimiento:</label>
-                        <textarea id="descripcion-edicion" rows="3" placeholder="Descripción de lo realizado" required></textarea>
-
-                        <label>Documentación Adicional:</label>
-                        <div id="fotos-container-edicion">
-                            <button type="button" id="btn-adjuntar-edicion" class="btn btn-outline">Adjuntar Archivo</button>
-                            <input type="file" id="input-foto-edicion" multiple style="display: none;">
-                        </div>
-
-                        <div id="fotos-previsualizacion-edicion"></div>
-                        
-                        <label for="estado-edicion">Cambiar Estado:</label>
-                        <select id="estado-edicion">
-                            <option value="en-espera">En Espera</option>
-                            <option value="iniciado">Iniciado</option>
-                            <option value="finalizado">Finalizado</option>
-                        </select>
-
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                        <button type="button" id="btn-cancelar-edicion" class="btn btn-secondary">Cancelar</button>
-                    </form>
-                </div>
-            -->
 
             <div class="accordion">
                     <h3 class="accordion-header">
