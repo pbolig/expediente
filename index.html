@@ -6,6 +6,7 @@
     <title>Expedientes</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/choices.min.css"/>
 </head>
 <body>
 
@@ -21,8 +22,13 @@
                 <select id="tipo-tramite" required>
                     </select>
 
-                <label for="descripcion">Descripción:</label>
-                <textarea id="descripcion" rows="5" placeholder="Descripción detallada del trámite" required></textarea>
+                <div class="campo-con-icono">
+                    <label for="descripcion">Descripción:</label>
+                    <button type="button" id="btn-reconocimiento-voz" class="btn-microfono" title="Convertir voz a texto">
+                        🎤
+                    </button>
+                </div>
+                <textarea id="descripcion" rows="5" placeholder="Descripción detallada del trámite... o presiona el 🎤 para dictar" required></textarea>
 
                 <label>Documentación:</label>
                 <div id="fotos-container">
@@ -39,10 +45,29 @@
 
         <section id="panel-consulta">
             <h2>Panel de Consulta</h2>
-            <form id="formulario-busqueda">
-                <label for="campo-busqueda">Buscar:</label>
-                <input type="text" id="campo-busqueda" placeholder="Nro. Expediente, descripción o tipo de trámite">
+            <form id="formulario-busqueda" class="form-busqueda-mejorado">
+                
+                <div class="campo-form">
+                    <label for="campo-busqueda">Buscar por texto:</label>
+                    <input type="text" id="campo-busqueda" placeholder="Nro. Expediente, descripción...">
+                </div>
+
+                <div class="campo-form">
+                    <label for="filtro-estado">Filtrar por Estado:</label>
+                    <div class="custom-select-wrapper" data-selected="Todos los Estados">
+                        <select id="filtro-estado" name="estado"></select>
+                    </div>
+                </div>
+
+                <div class="campo-form">
+                    <label for="filtro-tipo-tramite">Filtrar por Tipo:</label>
+                    <div class="custom-select-wrapper" data-selected="Todos los Tipos">
+                        <select id="filtro-tipo-tramite" name="tipoTramite"></select>
+                    </div>
+                </div>
+                
                 <button type="submit" class="btn btn-primary">Buscar</button>
+
             </form>
 
             <div id="resultados-busqueda"></div>
@@ -86,14 +111,22 @@
                         <div id="fotos-previsualizacion-edicion"></div>
                         
                         <label for="estado-edicion">Cambiar Estado:</label>
+
                         <select id="estado-edicion" name="nuevoEstado">
                             <option value="en-espera">En Espera</option>
                             <option value="iniciado">Iniciado</option>
                             <option value="finalizado">Finalizado</option>
                         </select>
+                        
 
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                        <button type="button" id="btn-cancelar-edicion" class="btn btn-secondary">Cancelar</button>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                            <button type="button" id="btn-cancelar-edicion" class="btn btn-secondary">Cancelar</button>
+                        </div>
+
+
+                        <!--<button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <button type="button" id="btn-cancelar-edicion" class="btn btn-secondary">Cancelar</button>-->
                     </form>
                 </div>
         </section>
@@ -113,6 +146,7 @@
         </div>
     </div>
 
+    <script src="js/choices.min.js"></script>
     <script src="js/app.js"></script>
     <script>
         // Registra el Service Worker

@@ -1,4 +1,7 @@
-/* Estilos Generales */
+/* ==========================================================================
+   Estilos Generales y Layout Principal
+   ========================================================================== */
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     margin: 0;
@@ -19,7 +22,7 @@ header {
 main {
     padding: 1rem;
     max-width: 900px;
-    margin: 0 auto;
+    margin: 2rem auto; /* Aumentamos el margen superior para separar del header */
 }
 
 section {
@@ -31,6 +34,26 @@ section {
     border: 1px solid #e0e0e0;
 }
 
+footer {
+    background-color: #343a40;
+    color: #f8f9fa;
+    text-align: center;
+    padding: 2rem 1rem;
+    margin-top: 2rem;
+    border-top: 4px solid #005A9C;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+footer p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #ced4da;
+}
+
+/* ==========================================================================
+   Tipografía
+   ========================================================================== */
+
 h2, h3 {
     color: #005A9C;
     border-bottom: 2px solid #eef2f5;
@@ -38,8 +61,10 @@ h2, h3 {
     margin-top: 0;
 }
 
-/* --- NUEVO: Estilos de Botones Unificados --- */
-/* Clase base para todos los botones */
+/* ==========================================================================
+   Botones
+   ========================================================================== */
+
 .btn {
     display: inline-block;
     padding: 10px 20px;
@@ -50,32 +75,19 @@ h2, h3 {
     cursor: pointer;
     text-align: center;
     text-decoration: none;
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
-}
-
-.btn2 {
-    display: inline-block;
-    padding: 10px 20px;
-    border-radius: 5px;
-    border: none;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    text-align: center;
-    text-decoration: none;
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease;
 }
 
 .btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+
 .btn:active {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Botón Primario (acciones principales como Guardar) */
 .btn-primary {
     background-color: #007BFF;
     color: white;
@@ -84,7 +96,6 @@ h2, h3 {
     background-color: #0056b3;
 }
 
-/* Botón Secundario (acciones alternativas como Cancelar) */
 .btn-secondary {
     background-color: #6c757d;
     color: white;
@@ -93,60 +104,228 @@ h2, h3 {
     background-color: #5a6268;
 }
 
-/* Botón de Contorno (acciones menos importantes) */
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
 .btn-outline {
     background-color: transparent;
     color: #007BFF;
     border: 2px solid #007BFF;
+    padding: 8px 18px; /* Ajuste de padding para botones con borde */
 }
 .btn-outline:hover {
     background-color: #007BFF;
     color: white;
 }
 
-/* Para que un botón ocupe todo el ancho */
-.btn-block {
-    display: block;
-    width: 100%;
+/* ==========================================================================
+   Formularios
+   ========================================================================== */
+
+/* --- Estilos Definitivos para el Formulario de Búsqueda --- */
+
+.form-busqueda-mejorado {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1.5rem; /* Espacio antes de los resultados */
+}
+
+.campo-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 200px; /* Tamaño base para cada campo */
+}
+
+.campo-form:first-of-type {
+    flex: 2 1 250px; /* El campo de texto crecerá más */
+}
+
+.campo-form label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Forzamos una altura consistente para todos los campos */
+.form-busqueda-mejorado input,
+.form-busqueda-mejorado .choices {
+    height: 45px;
+}
+
+/* Aseguramos que el interior del combo se ajuste a la altura */
+.form-busqueda-mejorado .choices__inner {
+    min-height: 45px;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 0;
+}
+.form-busqueda-mejorado .choices__list--single {
+    padding: 6px 16px 4px 10px;
+}
+
+/* El botón se alinea y se adapta */
+.form-busqueda-mejorado button {
+    height: 45px;
+    flex-shrink: 0;
+}
+
+/* Comportamiento para pantallas pequeñas */
+@media (max-width: 900px) {
+    .form-busqueda-mejorado button {
+        flex-basis: 100%; /* El botón se va a una nueva línea */
+    }
 }
 
 
-/* Formularios */
+/* --- Estilos para campos de formulario generales --- */
+
 form label {
     display: block;
-    margin-top: 1rem;
     margin-bottom: 0.5rem;
     font-weight: bold;
 }
 
 form input[type="text"],
-form textarea,
-form select {
+form textarea {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+    font-size: 1rem;
 }
 
-/* Contenedor de búsqueda */
-#formulario-busqueda {
+/* Contenedor para botones de Guardar/Cancelar */
+.form-actions {
+    margin-top: 1.5rem;
     display: flex;
     gap: 10px;
-    align-items: center;
-}
-#formulario-busqueda input {
-    flex-grow: 1; /* El input ocupa el espacio disponible */
+    justify-content: flex-end;
 }
 
-/* Previsualización de archivos */
+/* ==========================================================================
+   Resultados y Listas
+   ========================================================================== */
+
+#resultados-busqueda {
+    margin-top: 1.5rem; /* Espacio sobre la lista de resultados */
+}
+
+.expediente-item, .acontecimiento-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #fdfdfd;
+}
+
+.acontecimiento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.acontecimiento-header h4 { margin: 0; }
+.fecha { color: #666; font-size: 0.9em; }
+
+/* ==========================================================================
+   Paginación
+   ========================================================================== */
+
+.paginacion {
+    display: flex;
+    flex-direction: column; /* Apila controles e info */
+    justify-content: center;
+    align-items: center;
+    margin-top: 1.5rem;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-paginacion {
+    border: 1px solid #dee2e6;
+    background-color: #fff;
+    color: #007BFF;
+    padding: 10px 15px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-paginacion:hover:not(:disabled) {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    transform: translateY(-2px);
+}
+
+.btn-paginacion:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.btn-paginacion.active, 
+.btn-paginacion:disabled {
+    background-color: #007BFF;
+    border-color: #007BFF;
+    color: white;
+    cursor: default;
+    transform: none;
+}
+
+.pagination-info {
+    text-align: center;
+    color: #6c757d;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Componentes (Acordeón, Previsualización, Modal)
+   ========================================================================== */
+
+/* --- Acordeón --- */
+.accordion-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+.accordion-icon {
+    font-size: 1.5rem;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+.accordion-header.active .accordion-icon {
+    transform: rotate(45deg);
+}
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+    padding: 0 1rem;
+}
+
+
+/* --- Previsualización de Archivos --- */
 #fotos-previsualizacion, #fotos-previsualizacion-edicion {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 1rem;
 }
-
 .previsualizacion-item {
     position: relative;
     width: 100px;
@@ -164,74 +343,22 @@ form select {
     object-fit: cover;
 }
 .btn-eliminar-preview {
-    position: absolute;
-    top: 2px;
-    right: 2px;
+    position: absolute; top: 2px; right: 2px;
     background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    line-height: 20px;
-    font-size: 12px;
-    padding: 0;
+    color: white; border: none; border-radius: 50%;
+    width: 20px; height: 20px; cursor: pointer;
+    line-height: 20px; font-size: 12px; padding: 0;
 }
 .previsualizacion-item .file-icon {
     font-size: 40px;
 }
 
-/* --- NUEVO: Estilos para el Acordeón --- */
-.accordion-header {
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    user-select: none; /* Evita que el texto se seleccione al hacer click */
-    border-bottom: 2px solid #005A9C;
-}
 
-.accordion-icon {
-    font-size: 1.5rem;
-    font-weight: bold;
-    transition: transform 0.3s ease;
-}
-
-/* Gira el ícono cuando el acordeón está activo */
-.accordion-header.active .accordion-icon {
-    transform: rotate(45deg);
-}
-
-.accordion-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease-out;
-    padding: 0 1rem; /* Añade padding para que no se pegue a los bordes */
-}
-
-
-/* Grilla de Acontecimientos */
-.acontecimiento-item {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    background: #fdfdfd;
-}
-.acontecimiento-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-.acontecimiento-header h4 { margin: 0; }
-.fecha { color: #666; font-size: 0.9em; }
-
-/* Modal */
+/* --- Modal --- */
 .modal {
-    display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-    width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8);
+    display: none; position: fixed; z-index: 1000;
+    left: 0; top: 0; width: 100%; height: 100%;
+    overflow: auto; background-color: rgba(0,0,0,0.8);
 }
 .modal-content {
     background-color: #fefefe; margin: 10% auto; padding: 20px;
@@ -240,168 +367,64 @@ form select {
 .close-btn {
     color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;
 }
-#fotos-modal-body {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
-}
-.contenedor-archivo {
-    text-align: center;
-    word-break: break-all;
-}
-.contenedor-archivo img {
-    max-width: 100%;
-    height: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-.contenedor-archivo .file-icon { font-size: 50px; }
-
-/* --- AJUSTES PARA LA GALERÍA DE IMÁGENES EN EL MODAL --- */
-
-/* 1. Define la grilla para las imágenes */
 .galeria-imagenes {
     display: grid;
-    /* Crea columnas automáticas de mínimo 150px que se ajustan al espacio */
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px; /* Espacio entre las imágenes */
-    width: 100%;
+    gap: 15px; width: 100%;
 }
-
-/* 2. Da estilo al contenedor de cada imagen */
 .contenedor-imagen {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    overflow: hidden; /* ¡Clave! Evita que la imagen se desborde */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column; /* Coloca la info debajo de la imagen */
-    background-color: #fff;
+    border: 1px solid #e0e0e0; border-radius: 8px;
+    overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex; flex-direction: column; background-color: #fff;
 }
-
-/* 3. La regla más importante: ajusta la imagen */
 .contenedor-imagen img {
-    width: 100%; /* La imagen ocupa el 100% del ancho de su contenedor */
-    height: 120px; /* Damos una altura fija para que todas se vean iguales */
-    object-fit: cover; /* La imagen cubre el espacio sin deformarse. Mágico. */
-    display: block; /* Elimina espacios extra debajo de la imagen */
+    width: 100%; height: 120px; object-fit: cover; display: block;
 }
-
-/* 4. Mejora la apariencia de la info debajo de la imagen */
 .info-archivo {
-    padding: 8px;
-    font-size: 0.85rem;
-    text-align: center;
+    padding: 8px; font-size: 0.85rem; text-align: center;
 }
-
 .nombre-archivo {
-    display: block; /* Asegura que ocupe su propia línea */
-    white-space: nowrap; /* Evita que el texto se parta en dos líneas */
-    overflow: hidden; /* Oculta el texto que no cabe */
-    text-overflow: ellipsis; /* Agrega "..." al final si el texto es muy largo */
+    display: block; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
     margin-bottom: 5px;
 }
 
-.btn-descargar-archivo {
-    background: transparent;
-    border: 1px solid #007BFF;
-    color: #007BFF;
-    border-radius: 4px;
-    padding: 4px 8px;
+.campo-con-icono {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre la etiqueta y el botón */
+}
+
+.btn-microfono {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 50%; /* Lo hacemos redondo */
+    width: 40px;
+    height: 40px;
     cursor: pointer;
-    font-size: 0.8rem;
-    width: 100%;
+    font-size: 1.2rem;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     transition: all 0.2s ease;
 }
 
-.btn-descargar-archivo:hover {
-    background: #007BFF;
+.btn-microfono:hover {
+    background-color: #e0e0e0;
+}
+
+/* Estilo para cuando está escuchando */
+.btn-microfono.escuchando {
+    background-color: #ff4136; /* Color rojo */
     color: white;
+    border-color: #ff4136;
+    box-shadow: 0 0 15px rgba(255, 65, 54, 0.7); /* Efecto de brillo */
+    animation: pulso-rojo 1.5s infinite;
 }
 
-/* Estilos para el encabezado del panel */
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #eef2f5;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-}
-
-.panel-header h2 {
-    border-bottom: none; /* Le quitamos el borde individual al h2 */
-    padding-bottom: 0;
-    margin: 0; /* Le quitamos el margen por defecto */
-}
-
-footer {
-    background-color: #343a40; /* Un gris oscuro, elegante */
-    color: #f8f9fa; /* Texto casi blanco para buen contraste */
-    text-align: center;
-    padding: 2rem 1rem; /* Más espaciado vertical */
-    margin-top: 2rem; /* Separa el footer del último contenido */
-    border-top: 4px solid #005A9C; /* Un detalle de color que conecta con el header */
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-}
-
-footer p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #ced4da; /* Un gris un poco más suave para el texto */
-}
-
-.paginacion {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 1.5rem; /* Espacio arriba de los botones */
-}
-
-.pagination-controls {
-    display: flex;
-    gap: 8px; /* Espacio entre los botones */
-    justify-content: center;
-    align-items: center;
-}
-
-.btn-paginacion {
-    border: 1px solid #dee2e6; /* Un borde sutil */
-    background-color: #fff;
-    color: #007BFF; /* Texto azul */
-    padding: 10px 15px;
-    font-size: 1rem;
-    font-weight: 500;
-    border-radius: 6px; /* Bordes redondeados */
-    cursor: pointer;
-    transition: all 0.2s ease-in-out; /* LA CLAVE: Anima todos los cambios */
-}
-
-/* Efecto al pasar el mouse por encima */
-.btn-paginacion:hover:not(:disabled) {
-    background-color: #e9ecef; /* Un fondo gris claro */
-    border-color: #adb5bd;
-    transform: translateY(-2px); /* Eleva ligeramente el botón */
-}
-
-/* Efecto al hacer clic */
-.btn-paginacion:active:not(:disabled) {
-    transform: scale(0.95); /* Efecto de 'presionar' el botón */
-}
-
-/* Estilo para el botón de la página actual */
-.btn-paginacion.active, 
-.btn-paginacion:disabled {
-    background-color: #007BFF;
-    border-color: #007BFF;
-    color: white;
-    cursor: default;
-}
-
-.pagination-info {
-    text-align: center;
-    color: #6c757d; /* Un color de texto más suave */
-    margin-top: 1rem;
-    font-size: 0.9rem;
+@keyframes pulso-rojo {
+    0% { box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7); }
+    70% { box-shadow: 0 0 15px 10px rgba(255, 65, 54, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 65, 54, 0); }
 }

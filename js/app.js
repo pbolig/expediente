@@ -29,10 +29,124 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnVolverBusqueda = document.getElementById('btn-volver-busqueda');
     const accordionHeader = document.querySelector('.accordion-header');
     const grillaAcontecimientos = document.getElementById('grilla-acontecimientos');
+    const filtroEstado = document.getElementById('filtro-estado');
+    const filtroTipoTramite = document.getElementById('filtro-tipo-tramite');
+    const btnVoz = document.getElementById('btn-reconocimiento-voz');
+    const descripcionTextarea = document.getElementById('descripcion');
 
     // --- Variables de Estado ---
     const fotosTomadas = [];
     const fotosEdicion = [];
+
+    // Opciones de configuración para nuestros filtros
+    const choicesOptions = {
+        itemSelectText: 'Seleccionar',
+        searchEnabled: false, // No necesitamos una caja de búsqueda en nuestros filtros
+        shouldSort: false, // Mantenemos el orden original de las opciones
+        allowHTML: true,
+    };
+
+    // Creamos las nuevas instancias de Choices.js
+    const choicesEstado = new Choices(filtroEstado, choicesOptions);
+    const choicesTipoTramite = new Choices(filtroTipoTramite, choicesOptions);
+
+    // --- Funciones para Poblar los Nuevos Filtros ---
+    const cargarFiltroEstados = () => {
+        // Limpiamos opciones existentes antes de cargar
+        choicesEstado.clearStore();
+        const estados = [
+            { value: '', label: 'Todos los Estados', selected: true },
+            { value: 'en-espera', label: 'En Espera' },
+            { value: 'iniciado', label: 'Iniciado' },
+            { value: 'finalizado', label: 'Finalizado' }
+        ];
+        choicesEstado.setChoices(estados, 'value', 'label', false);
+    };
+
+    const cargarOpcionesTipoTramite = async (choicesInstance, selectElement) => {
+        try {
+            const response = await fetch(`${API_URL}/api/tipos-tramite`);
+            if (response.ok) {
+                const tipos = await response.json();
+                
+                // Limpiamos opciones existentes
+                if (choicesInstance) choicesInstance.clearStore();
+                else selectElement.innerHTML = '';
+                
+                const opciones = [{ value: '', label: 'Todos los Tipos', selected: true }];
+                tipos.forEach(tipo => {
+                    opciones.push({ value: tipo.id, label: tipo.nombre });
+                });
+
+                if (choicesInstance) {
+                    choicesInstance.setChoices(opciones, 'value', 'label', false);
+                } else { // Para el select normal del formulario de registro
+                     opciones.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt.value;
+                        option.textContent = opt.label;
+                        selectElement.appendChild(option);
+                     });
+                }
+            }
+        } catch (error) { console.error('Error al cargar tipos de trámite:', error); }
+    };
+
+    // Comprobamos si el navegador es compatible
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        let isListening = false;
+
+        // Configuración del reconocimiento
+        recognition.lang = 'es-AR'; // Español (Argentina) ¡Muy importante para el acento!
+        recognition.continuous = true; // Sigue escuchando hasta que lo paremos
+        recognition.interimResults = false; // Solo nos da el resultado final
+
+        // Evento que se dispara cuando el reconocimiento detecta voz y la convierte a texto
+        recognition.onresult = (event) => {
+            let textoFinal = '';
+            for (const resultado of event.results) {
+                textoFinal += resultado[0].transcript;
+            }
+            // Agregamos el texto reconocido al final del textarea, con un espacio
+            descripcionTextarea.value += (descripcionTextarea.value.length > 0 ? ' ' : '') + textoFinal;
+        };
+
+        // Evento para manejar errores
+        recognition.onerror = (event) => {
+            console.error('Error en el reconocimiento de voz:', event.error);
+        };
+
+        // Evento que se dispara cuando el reconocimiento termina
+        recognition.onend = () => {
+            isListening = false;
+            btnVoz.classList.remove('escuchando');
+            console.log('Reconocimiento de voz detenido.');
+        };
+
+        // Manejador del clic en el botón del micrófono
+        btnVoz.addEventListener('click', () => {
+            if (isListening) {
+                recognition.stop(); // Si está escuchando, lo paramos
+            } else {
+                try {
+                    recognition.start(); // Si no está escuchando, lo iniciamos
+                    isListening = true;
+                    btnVoz.classList.add('escuchando');
+                    console.log('Iniciando reconocimiento de voz...');
+                } catch (error) {
+                    console.error("Error al iniciar el reconocimiento:", error);
+                    alert("No se pudo iniciar el reconocimiento de voz. Puede que ya esté activo en otra pestaña.");
+                }
+            }
+        });
+
+    } else {
+        // Si el navegador no es compatible, ocultamos el botón
+        console.warn('La API de Reconocimiento de Voz no es compatible con este navegador.');
+        btnVoz.style.display = 'none';
+    }
 
     // --- Funciones Utilitarias ---
     const obtenerIconoArchivo = (nombreArchivo) => {
@@ -49,6 +163,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const descargarArchivo = async (nombreArchivo) => {
         window.open(`${API_URL}/uploads/${nombreArchivo}`, '_blank');
     };
+
+    // Función para actualizar la apariencia de los selects personalizados
+    const actualizarCustomSelect = (selectElement) => {
+        const wrapper = selectElement.parentElement;
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        wrapper.setAttribute('data-selected', selectedOption.textContent);
+    };
+
+    // Aplicamos la lógica a ambos filtros
+    [filtroEstado, filtroTipoTramite].forEach(select => {
+        // Lo actualizamos al cargar la página
+        select.addEventListener('focus', () => { // Se asegura de que se actualice si las opciones cargan tarde
+            actualizarCustomSelect(select);
+        });
+
+        // Y cada vez que el usuario cambia la opción
+        select.addEventListener('change', () => {
+            actualizarCustomSelect(select);
+        });
+    });
 
     const actualizarAlturaAcordeon = () => {
         if (panelEdicion.style.display === 'block' && accordionHeader.classList.contains('active')) {
@@ -102,9 +236,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) { console.error('Error al cargar tipos de trámite:', error); }
     };
 
-    const buscarExpedientes = async (termino, page = 1) => {
+    const buscarExpedientes = async (termino, estado, tipoTramite, page = 1) => {
         try {
-            const url = `${API_URL}/api/tramites?busqueda=${encodeURIComponent(termino)}&page=${page}`;
+            let url = `${API_URL}/api/tramites?busqueda=${encodeURIComponent(termino)}&page=${page}`;
+            if (estado) url += `&estado=${estado}`;
+            if (tipoTramite) url += `&tipoTramite=${tipoTramite}`;
+
             const response = await fetch(url);
             if (response.ok) {
                 const data = await response.json();
@@ -122,23 +259,14 @@ document.addEventListener('DOMContentLoaded', () => {
         resultadosBusqueda.innerHTML = '';
         const paginacionContainer = document.getElementById('paginacion-busqueda');
         paginacionContainer.innerHTML = '';
-
         if (!data.expedientes || data.expedientes.length === 0) {
             resultadosBusqueda.innerHTML = '<p>No se encontraron expedientes.</p>';
             return;
         }
-
         data.expedientes.forEach(expediente => {
             const expedienteDiv = document.createElement('div');
             expedienteDiv.classList.add('expediente-item');
-            expedienteDiv.innerHTML = `
-                <h3>Nro. Expediente: ${expediente.numero_expediente}</h3>
-                <p><strong>Fecha:</strong> ${new Date(expediente.fecha_creacion).toLocaleDateString()}</p>
-                <p><strong>Descripción:</strong> ${expediente.descripcion}</p>
-                <p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p>
-                <p><strong>Estado:</strong> ${expediente.estado}</p>
-                <button class="btn btn-outline btn-ver-acontecimientos" data-expediente-id="${expediente.id}">Ver Detalles</button>
-            `;
+            expedienteDiv.innerHTML = `<h3>Nro. Expediente: ${expediente.numero_expediente}</h3><p><strong>Fecha:</strong> ${new Date(expediente.fecha_creacion).toLocaleDateString()}</p><p><strong>Descripción:</strong> ${expediente.descripcion}</p><p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p><p><strong>Estado:</strong> ${expediente.estado}</p><button class="btn btn-outline btn-ver-acontecimientos" data-expediente-id="${expediente.id}">Ver Detalles</button>`;
             resultadosBusqueda.appendChild(expedienteDiv);
         });
 
@@ -149,7 +277,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.disabled = deshabilitado;
                 btn.classList.add('btn-paginacion');
                 if (activo) btn.classList.add('active');
-                btn.addEventListener('click', () => buscarExpedientes(campoBusqueda.value, pagina));
+                btn.addEventListener('click', () => buscarExpedientes(
+                    campoBusqueda.value,
+                    choicesEstado.getValue(true),
+                    choicesTipoTramite.getValue(true),
+                    pagina
+                ));
                 return btn;
             };
             const controlesDiv = document.createElement('div');
@@ -326,7 +459,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     formularioBusqueda.addEventListener('submit', (event) => {
         event.preventDefault();
-        buscarExpedientes(campoBusqueda.value, 1);
+        buscarExpedientes(
+            campoBusqueda.value,
+            choicesEstado.getValue(true), // Usamos el método de Choices.js para obtener el valor
+            choicesTipoTramite.getValue(true),
+            1
+        );
     });
 
     resultadosBusqueda.addEventListener('click', async (event) => {
@@ -415,6 +553,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Inicialización ---
-    cargarTiposTramite();
-    buscarExpedientes('', 1);
+    cargarFiltroEstados();
+    cargarOpcionesTipoTramite(choicesTipoTramite);
+    cargarOpcionesTipoTramite(null, selectTipoTramite); // Para el select normal, no pasamos instancia de Choices
+    buscarExpedientes('', '', '', 1);
 });

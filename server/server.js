@@ -70,80 +70,49 @@ app.post('/api/tramites', upload.any(), async (req, res) => {
     }
 });
 
-/*
 app.get('/api/tramites', async (req, res) => {
     const conn = await pool.getConnection();
     try {
-        const { busqueda } = req.query;
-        let query = `
-            SELECT 
-                e.id, 
-                e.numero_expediente, 
-                e.fecha_creacion, 
-                e.descripcion, 
-                e.estado,
-                t.nombre as tipo_tramite_nombre
-            FROM expedientes e
-            INNER JOIN tipos_tramite t ON e.tipo_tramite_id = t.id
-        `;
-        const params = [];
-
-        if (busqueda) {
-            query += `
-                WHERE e.numero_expediente LIKE ? OR e.descripcion LIKE ? OR t.nombre LIKE ?
-            `;
-            const termino = `%${busqueda}%`;
-            params.push(termino, termino, termino);
-        }
-
-        query += ` ORDER BY e.fecha_creacion DESC`;
-
-        const [rows] = await conn.execute(query, params);
-        res.status(200).json(rows);
-    } catch (error) {
-        console.error('Error al buscar expedientes:', error);
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    } finally {
-        conn.release();
-    }
-});
-*/
-
-app.get('/api/tramites', async (req, res) => {
-    const conn = await pool.getConnection();
-    try {
-        const { busqueda } = req.query;
+        const { busqueda, estado, tipoTramite, page = 1 } = req.query; // Obtenemos los nuevos filtros
         const limit = 5;
-
-        let page = parseInt(req.query.page, 10);
-        if (isNaN(page) || page < 1) page = 1;
-        const offset = (page - 1) * limit;
+        
+        let pageNum = parseInt(page, 10);
+        if (isNaN(pageNum) || pageNum < 1) pageNum = 1;
+        const offset = (pageNum - 1) * limit;
 
         const selectFields = `SELECT e.id, e.numero_expediente, e.fecha_creacion, e.descripcion, e.estado, t.nombre as tipo_tramite_nombre FROM expedientes e INNER JOIN tipos_tramite t ON e.tipo_tramite_id = t.id`;
         
-        if (busqueda) {
-            const termino = `%${busqueda}%`;
-            const whereClause = `WHERE e.numero_expediente LIKE ? OR e.descripcion LIKE ? OR t.nombre LIKE ?`;
-            const countQuery = `SELECT COUNT(e.id) as total FROM expedientes e INNER JOIN tipos_tramite t ON e.tipo_tramite_id = t.id ${whereClause}`;
-            const [countRows] = await conn.execute(countQuery, [termino, termino, termino]);
-            const totalPages = Math.ceil(countRows[0].total / limit);
-            const dataQuery = `${selectFields} ${whereClause} ORDER BY e.fecha_creacion DESC LIMIT ? OFFSET ?`;
-            
-            // --- SOLUCIÓN: Convertimos limit y offset a String ---
-            const [rows] = await conn.execute(dataQuery, [termino, termino, termino, String(limit), String(offset)]);
-            
-            res.status(200).json({ expedientes: rows, total_pages: totalPages, current_page: page });
-        } else {
-            const countQuery = `SELECT COUNT(id) as total FROM expedientes`;
-            const [countRows] = await conn.execute(countQuery);
-            const totalPages = Math.ceil(countRows[0].total / limit);
-            const dataQuery = `${selectFields} ORDER BY e.fecha_creacion DESC LIMIT ? OFFSET ?`;
+        // --- LÓGICA DE FILTRADO DINÁMICO ---
+        const conditions = [];
+        const params = [];
 
-            // --- SOLUCIÓN: Convertimos limit y offset a String ---
-            const [rows] = await conn.execute(dataQuery, [String(limit), String(offset)]);
-            
-            res.status(200).json({ expedientes: rows, total_pages: totalPages, current_page: page });
+        if (busqueda) {
+            conditions.push(`(e.numero_expediente LIKE ? OR e.descripcion LIKE ? OR t.nombre LIKE ?)`);
+            const termino = `%${busqueda}%`;
+            params.push(termino, termino, termino);
         }
+        if (estado) {
+            conditions.push(`e.estado = ?`);
+            params.push(estado);
+        }
+        if (tipoTramite) {
+            conditions.push(`e.tipo_tramite_id = ?`);
+            params.push(tipoTramite);
+        }
+
+        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+        
+        // Query para contar
+        const countQuery = `SELECT COUNT(e.id) as total FROM expedientes e INNER JOIN tipos_tramite t ON e.tipo_tramite_id = t.id ${whereClause}`;
+        const [countRows] = await conn.execute(countQuery, params);
+        const totalPages = Math.ceil(countRows[0].total / limit);
+
+        // Query para obtener los datos
+        const dataQuery = `${selectFields} ${whereClause} ORDER BY e.fecha_creacion DESC LIMIT ? OFFSET ?`;
+        const [rows] = await conn.execute(dataQuery, [...params, String(limit), String(offset)]);
+        
+        res.status(200).json({ expedientes: rows, total_pages: totalPages, current_page: pageNum });
+
     } catch (error) {
         console.error('Error al buscar expedientes:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });
