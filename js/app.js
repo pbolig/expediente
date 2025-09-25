@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const descripcionEdicion = document.getElementById('descripcion-edicion');
     const inputFotoEdicion = document.getElementById('input-foto-edicion');
     const fotosPrevisualizacionEdicion = document.getElementById('fotos-previsualizacion-edicion');
-    const selectEstadoEdicion = document.getElementById('estado-edicion');
     const btnAdjuntarEdicion = document.getElementById('btn-adjuntar-edicion');
     const btnCancelarEdicion = document.getElementById('btn-cancelar-edicion');
     const btnVolverBusqueda = document.getElementById('btn-volver-busqueda');
@@ -34,60 +33,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnVoz = document.getElementById('btn-reconocimiento-voz');
     const descripcionTextarea = document.getElementById('descripcion');
 
+    // --- Inicialización de Choices.js ---
+    const choicesOptions = { itemSelectText: '', searchEnabled: false, shouldSort: false, allowHTML: true };
+    const choicesEstado = new Choices(filtroEstado, choicesOptions);
+    const choicesTipoTramite = new Choices(filtroTipoTramite, choicesOptions);
+    const choicesFormularioTramite = new Choices(selectTipoTramite, { ...choicesOptions, searchEnabled: true });
+    
     // --- Variables de Estado ---
     const fotosTomadas = [];
     const fotosEdicion = [];
 
-    // Opciones de configuración para nuestros filtros
-    const choicesOptions = {
-        itemSelectText: 'Seleccionar',
-        searchEnabled: false, // No necesitamos una caja de búsqueda en nuestros filtros
-        shouldSort: false, // Mantenemos el orden original de las opciones
-        allowHTML: true,
-    };
-
-    // Creamos las nuevas instancias de Choices.js
-    const choicesEstado = new Choices(filtroEstado, choicesOptions);
-    const choicesTipoTramite = new Choices(filtroTipoTramite, choicesOptions);
-
-    // --- Funciones para Poblar los Nuevos Filtros ---
+    // --- Funciones para Poblar Filtros y Selects ---
     const cargarFiltroEstados = () => {
-        // Limpiamos opciones existentes antes de cargar
         choicesEstado.clearStore();
-        const estados = [
-            { value: '', label: 'Todos los Estados', selected: true },
-            { value: 'en-espera', label: 'En Espera' },
-            { value: 'iniciado', label: 'Iniciado' },
-            { value: 'finalizado', label: 'Finalizado' }
-        ];
+        const estados = [{ value: '', label: 'Todos los Estados', selected: true }, { value: 'en-espera', label: 'En Espera' }, { value: 'iniciado', label: 'Iniciado' }, { value: 'finalizado', label: 'Finalizado' }];
         choicesEstado.setChoices(estados, 'value', 'label', false);
     };
 
-    const cargarOpcionesTipoTramite = async (choicesInstance, selectElement) => {
+    const cargarOpcionesTipoTramite = async (choicesInstance, defaultLabel = 'Todos los Tipos') => {
         try {
             const response = await fetch(`${API_URL}/api/tipos-tramite`);
             if (response.ok) {
                 const tipos = await response.json();
-                
-                // Limpiamos opciones existentes
-                if (choicesInstance) choicesInstance.clearStore();
-                else selectElement.innerHTML = '';
-                
-                const opciones = [{ value: '', label: 'Todos los Tipos', selected: true }];
-                tipos.forEach(tipo => {
-                    opciones.push({ value: tipo.id, label: tipo.nombre });
-                });
-
-                if (choicesInstance) {
-                    choicesInstance.setChoices(opciones, 'value', 'label', false);
-                } else { // Para el select normal del formulario de registro
-                     opciones.forEach(opt => {
-                        const option = document.createElement('option');
-                        option.value = opt.value;
-                        option.textContent = opt.label;
-                        selectElement.appendChild(option);
-                     });
-                }
+                choicesInstance.clearStore();
+                const opciones = [{ value: '', label: defaultLabel, selected: true, disabled: true }];
+                tipos.forEach(tipo => opciones.push({ value: tipo.id, label: tipo.nombre }));
+                choicesInstance.setChoices(opciones, 'value', 'label', false);
             }
         } catch (error) { console.error('Error al cargar tipos de trámite:', error); }
     };
@@ -97,54 +68,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
         let isListening = false;
-
-        // Configuración del reconocimiento
-        recognition.lang = 'es-AR'; // Español (Argentina) ¡Muy importante para el acento!
-        recognition.continuous = true; // Sigue escuchando hasta que lo paremos
-        recognition.interimResults = false; // Solo nos da el resultado final
-
-        // Evento que se dispara cuando el reconocimiento detecta voz y la convierte a texto
+        recognition.lang = 'es-AR';
+        recognition.continuous = true;
+        recognition.interimResults = false;
         recognition.onresult = (event) => {
             let textoFinal = '';
             for (const resultado of event.results) {
                 textoFinal += resultado[0].transcript;
             }
-            // Agregamos el texto reconocido al final del textarea, con un espacio
             descripcionTextarea.value += (descripcionTextarea.value.length > 0 ? ' ' : '') + textoFinal;
         };
-
-        // Evento para manejar errores
-        recognition.onerror = (event) => {
-            console.error('Error en el reconocimiento de voz:', event.error);
-        };
-
-        // Evento que se dispara cuando el reconocimiento termina
+        recognition.onerror = (event) => console.error('Error en el reconocimiento de voz:', event.error);
         recognition.onend = () => {
             isListening = false;
             btnVoz.classList.remove('escuchando');
-            console.log('Reconocimiento de voz detenido.');
         };
-
-        // Manejador del clic en el botón del micrófono
         btnVoz.addEventListener('click', () => {
             if (isListening) {
-                recognition.stop(); // Si está escuchando, lo paramos
+                recognition.stop();
             } else {
                 try {
-                    recognition.start(); // Si no está escuchando, lo iniciamos
+                    recognition.start();
                     isListening = true;
                     btnVoz.classList.add('escuchando');
-                    console.log('Iniciando reconocimiento de voz...');
                 } catch (error) {
                     console.error("Error al iniciar el reconocimiento:", error);
-                    alert("No se pudo iniciar el reconocimiento de voz. Puede que ya esté activo en otra pestaña.");
                 }
             }
         });
-
     } else {
-        // Si el navegador no es compatible, ocultamos el botón
-        console.warn('La API de Reconocimiento de Voz no es compatible con este navegador.');
+        console.warn('API de Reconocimiento de Voz no compatible.');
         btnVoz.style.display = 'none';
     }
 
@@ -159,9 +112,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const extensionesImagen = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
         return extensionesImagen.includes(nombreArchivo.split('.').pop().toLowerCase());
     };
-
     const descargarArchivo = async (nombreArchivo) => {
-        window.open(`${API_URL}/uploads/${nombreArchivo}`, '_blank');
+        try {
+            const response = await fetch(`${API_URL}/uploads/${nombreArchivo}`);
+            if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+            const blob = await response.blob();
+            const urlBlob = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = urlBlob;
+            a.download = nombreArchivo;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(urlBlob);
+            a.remove();
+        } catch (error) {
+            console.error('Error al descargar:', error);
+            alert('No se pudo descargar el archivo.');
+        }
     };
 
     // Función para actualizar la apariencia de los selects personalizados
@@ -241,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let url = `${API_URL}/api/tramites?busqueda=${encodeURIComponent(termino)}&page=${page}`;
             if (estado) url += `&estado=${estado}`;
             if (tipoTramite) url += `&tipoTramite=${tipoTramite}`;
-
             const response = await fetch(url);
             if (response.ok) {
                 const data = await response.json();
@@ -269,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
             expedienteDiv.innerHTML = `<h3>Nro. Expediente: ${expediente.numero_expediente}</h3><p><strong>Fecha:</strong> ${new Date(expediente.fecha_creacion).toLocaleDateString()}</p><p><strong>Descripción:</strong> ${expediente.descripcion}</p><p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p><p><strong>Estado:</strong> ${expediente.estado}</p><button class="btn btn-outline btn-ver-acontecimientos" data-expediente-id="${expediente.id}">Ver Detalles</button>`;
             resultadosBusqueda.appendChild(expedienteDiv);
         });
-
         if (data.total_pages > 1) {
             const crearBoton = (texto, pagina, deshabilitado = false, activo = false) => {
                 const btn = document.createElement('button');
@@ -277,12 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.disabled = deshabilitado;
                 btn.classList.add('btn-paginacion');
                 if (activo) btn.classList.add('active');
-                btn.addEventListener('click', () => buscarExpedientes(
-                    campoBusqueda.value,
-                    choicesEstado.getValue(true),
-                    choicesTipoTramite.getValue(true),
-                    pagina
-                ));
+                btn.addEventListener('click', () => buscarExpedientes(campoBusqueda.value, choicesEstado.getValue(true), choicesTipoTramite.getValue(true), pagina));
                 return btn;
             };
             const controlesDiv = document.createElement('div');
@@ -304,6 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelector('#panel-edicion .panel-header h2').textContent = `Detalles del Expediente: ${expediente.numero_expediente}`;
                 expedienteIdEdicion.value = expediente.id;
                 document.getElementById('info-expediente-general').innerHTML = `<p><strong>Descripción General:</strong> ${expediente.descripcion}</p><p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p><hr>`;
+                
+                const radioActivo = document.querySelector(`input[name="estado-toggle"][value="${expediente.estado}"]`);
+                if (radioActivo) {
+                    radioActivo.checked = true;
+                }
             }
         } catch (error) { console.error('Error al cargar expediente:', error); }
     };
@@ -338,10 +304,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="btn btn-outline btn-ver-archivos" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">
                             📁 Ver Archivos
                         </button>
-                        <button class="btn btn-secondary btn-editar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}">
+                        <button class="btn btn-secondary btn-editar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">
                             ✏️ Editar
                         </button>
-                        <button class="btn btn-danger btn-eliminar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}">
+                        <button class="btn btn-danger btn-eliminar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">
                             🗑️ Eliminar
                         </button>
                     </div>`;
@@ -356,59 +322,68 @@ document.addEventListener('DOMContentLoaded', () => {
     const mostrarArchivosEnModal = (archivos, tituloModal) => {
         fotosModalBody.innerHTML = '';
         document.querySelector('#modal-fotos h2').textContent = tituloModal;
-    
         if (!archivos || archivos.length === 0) {
             fotosModalBody.innerHTML = '<p>No hay archivos para este acontecimiento.</p>';
-            modalFotos.style.display = 'block';
-            return;
+        } else {
+            archivos.forEach(archivo => {
+                const div = document.createElement('div');
+                div.classList.add('contenedor-imagen'); // Reutilizamos esta clase para la grilla
+                if (esImagen(archivo.nombre_archivo)) {
+                    div.innerHTML = `<img src="${API_URL}/uploads/${archivo.nombre_archivo}" alt="${archivo.nombre_archivo}">`;
+                } else {
+                    div.innerHTML = `<div class="file-placeholder"><span class="file-icon">${obtenerIconoArchivo(archivo.nombre_archivo)}</span></div>`;
+                }
+                const infoDiv = document.createElement('div');
+                infoDiv.classList.add('info-archivo');
+                infoDiv.innerHTML = `<span class="nombre-archivo">${archivo.nombre_archivo}</span>`;
+                const btnDescargar = document.createElement('button');
+                btnDescargar.classList.add('btn', 'btn-outline');
+                btnDescargar.style.width = '100%';
+                btnDescargar.style.padding = '4px 8px';
+                btnDescargar.textContent = 'Descargar';
+                btnDescargar.onclick = () => descargarArchivo(archivo.nombre_archivo);
+                infoDiv.appendChild(btnDescargar);
+                div.appendChild(infoDiv);
+                fotosModalBody.appendChild(div);
+            });
         }
-    
-        archivos.forEach(archivo => {
-            const div = document.createElement('div');
-            div.classList.add('contenedor-archivo');
-            if (esImagen(archivo.nombre_archivo)) {
-                div.innerHTML = `<img src="${API_URL}/uploads/${archivo.nombre_archivo}" alt="${archivo.nombre_archivo}">`;
-            } else {
-                div.innerHTML = `<span class="file-icon">${obtenerIconoArchivo(archivo.nombre_archivo)}</span><p>${archivo.nombre_archivo}</p>`;
-            }
-            const btnDescargar = document.createElement('button');
-            btnDescargar.classList.add('btn', 'btn-outline');
-            btnDescargar.textContent = 'Descargar';
-            btnDescargar.onclick = () => descargarArchivo(archivo.nombre_archivo);
-            div.appendChild(btnDescargar);
-            fotosModalBody.appendChild(div);
-        });
-    
         modalFotos.style.display = 'block';
     };
 
     const enviarFormulario = async (event) => {
         event.preventDefault();
-        const tipoTramite = selectTipoTramite.value;
+
+        // -- Leemos el valor usando el método de Choices.js --
+        const tipoTramite = choicesFormularioTramite.getValue(true);
         const descripcion = document.getElementById('descripcion').value;
+
+        if (!tipoTramite) {
+            alert('Por favor, seleccione un tipo de trámite.');
+            return;
+        }
         if (fotosTomadas.length === 0) {
             alert('Por favor, adjunte al menos un documento.');
             return;
         }
+
         const formData = new FormData();
         formData.append('tipoTramite', tipoTramite);
         formData.append('descripcion', descripcion);
         fotosTomadas.forEach((foto, index) => {
             formData.append(`foto-${index}`, foto);
         });
+        
         try {
-            const response = await fetch(`${API_URL}/api/tramites`, {
-                method: 'POST', body: formData
-            });
+            const response = await fetch(`${API_URL}/api/tramites`, { method: 'POST', body: formData });
             if (response.ok) {
                 const resultado = await response.json();
-                console.log('Expediente guardado con éxito:', resultado);
                 alert(`Expediente ${resultado.numero_expediente} guardado con éxito!`);
                 formulario.reset();
                 fotosPrevisualizacion.innerHTML = '';
                 fotosTomadas.length = 0;
+                choicesFormularioTramite.clearStore(); // Limpiamos el combo
+                cargarOpcionesTipoTramite(choicesFormularioTramite, 'Seleccione un tipo...'); // Lo recargamos
             } else {
-                console.error('Error al guardar el expediente:', response.statusText);
                 alert('Hubo un error al guardar el expediente.');
             }
         } catch (error) {
@@ -420,22 +395,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const enviarAcontecimiento = async (event) => {
         event.preventDefault();
         const expedienteId = expedienteIdEdicion.value;
-        if (!expedienteId) {
-            alert("Error: No se ha seleccionado un expediente.");
-            return;
-        }
+        if (!expedienteId) { alert("Error: No se ha seleccionado un expediente."); return; }
         const numeroExpediente = document.querySelector('#panel-edicion .panel-header h2').textContent.split(': ')[1];
-        if (!numeroExpediente) {
-            alert("Error: No se pudo leer el número de expediente.");
-            return;
-        }
+        if (!numeroExpediente) { alert("Error: No se pudo leer el número de expediente."); return; }
+
         const formData = new FormData();
+        const nuevoEstado = document.querySelector('input[name="estado-toggle"]:checked').value;
         formData.append('descripcionAcontecimiento', descripcionEdicion.value);
-        formData.append('nuevoEstado', selectEstadoEdicion.value);
+        formData.append('nuevoEstado', nuevoEstado);
         formData.append('numeroExpediente', numeroExpediente);
-        fotosEdicion.forEach((foto, index) => {
-            formData.append(`foto-${index}`, foto);
-        });
+        fotosEdicion.forEach((foto, index) => formData.append(`foto-${index}`, foto));
+
         try {
             const response = await fetch(`${API_URL}/api/acontecimientos/${expedienteId}`, { method: 'POST', body: formData });
             if (response.ok) {
@@ -461,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         buscarExpedientes(
             campoBusqueda.value,
-            choicesEstado.getValue(true), // Usamos el método de Choices.js para obtener el valor
+            choicesEstado.getValue(true),
             choicesTipoTramite.getValue(true),
             1
         );
@@ -482,9 +452,10 @@ document.addEventListener('DOMContentLoaded', () => {
     grillaAcontecimientos.addEventListener('click', async (event) => {
         const boton = event.target.closest('button');
         if (!boton) return;
-    
+
         const acontecimientoId = boton.dataset.acontecimientoId;
-    
+        const expedienteId = boton.dataset.expedienteId;
+
         if (boton.classList.contains('btn-ver-archivos')) {
             try {
                 boton.disabled = true;
@@ -492,28 +463,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}/fotos`);
                 if (response.ok) {
                     const archivos = await response.json();
-                    mostrarArchivosEnModal(archivos, `Archivos del Acontecimiento #${acontecimientoId}`);
+                    mostrarArchivosEnModal(archivos, `Archivos del Acontecimiento`);
                 } else {
                     alert('No se pudieron obtener los archivos.');
                 }
             } catch (error) {
                 console.error('Error de red:', error);
-                alert('No se pudo conectar con el servidor.');
             } finally {
                 boton.disabled = false;
                 boton.innerHTML = '📁 Ver Archivos';
             }
         }
-    
+
         if (boton.classList.contains('btn-editar-acontecimiento')) {
-            alert(`Funcionalidad 'Editar' para el acontecimiento #${acontecimientoId} pendiente de implementar.`);
-        }
-    
-        if (boton.classList.contains('btn-eliminar-acontecimiento')) {
-            if (confirm(`¿Está seguro de que desea eliminar el acontecimiento #${acontecimientoId}?`)) {
-                alert(`Funcionalidad 'Eliminar' pendiente de implementar.`);
+            const itemAcontecimiento = boton.closest('.acontecimiento-item');
+            const pDescripcion = itemAcontecimiento.querySelector('.acontecimiento-content p:first-of-type strong');
+            const descripcionActual = pDescripcion.nextSibling.textContent.trim();
+            const nuevaDescripcion = prompt("Edita la descripción:", descripcionActual);
+
+            if (nuevaDescripcion && nuevaDescripcion !== descripcionActual) {
+                try {
+                    const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ descripcion: nuevaDescripcion })
+                    });
+                    if (response.ok) {
+                        alert('Acontecimiento actualizado.');
+                        await mostrarAcontecimientos(expedienteId, 1); // Ahora 'expedienteId' está definido
+                    } else {
+                        alert('Error al actualizar.');
+                    }
+                } catch (error) {
+                    console.error("Error al editar:", error);
+                }
             }
         }
+
+        if (boton.classList.contains('btn-eliminar-acontecimiento')) {
+            if (confirm(`¿Estás seguro de eliminar este acontecimiento y todos sus archivos?`)) {
+                try {
+                    const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        alert('Acontecimiento eliminado.');
+                        await mostrarAcontecimientos(expedienteId, 1); // Ahora 'expedienteId' está definido
+                    } else {
+                        alert('Error al eliminar.');
+                    }
+                } catch (error) {
+                    console.error("Error al eliminar:", error);
+                }
+            }
+        }
+
     });
     
     formulario.addEventListener('submit', enviarFormulario);
@@ -554,7 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Inicialización ---
     cargarFiltroEstados();
-    cargarOpcionesTipoTramite(choicesTipoTramite);
-    cargarOpcionesTipoTramite(null, selectTipoTramite); // Para el select normal, no pasamos instancia de Choices
+    cargarOpcionesTipoTramite(choicesTipoTramite, 'Todos los Tipos');
+    cargarOpcionesTipoTramite(choicesFormularioTramite, 'Seleccione un tipo...');
     buscarExpedientes('', '', '', 1);
 });

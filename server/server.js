@@ -39,34 +39,57 @@ const upload = multer();
 // --- API Endpoints ---
 
 app.post('/api/tramites', upload.any(), async (req, res) => {
-    // ... Este endpoint no cambia
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
         const { tipoTramite, descripcion } = req.body;
         const fotos = req.files;
-        if (!tipoTramite || !descripcion || !fotos || fotos.length === 0) {
+
+        if (!tipoTramite || !descripcion || !fotos || !fotos.length) {
             return res.status(400).json({ error: 'Faltan datos o fotos.' });
         }
+
         const fechaHora = new Date();
         const numeroExpediente = fechaHora.toISOString().replace(/[-:.]/g, '').slice(0, 14);
-        const [expedienteResult] = await conn.execute('INSERT INTO expedientes (numero_expediente, fecha_creacion, descripcion, tipo_tramite_id, estado) VALUES (?, ?, ?, ?, ?)', [numeroExpediente, fechaHora, descripcion, tipoTramite, 'en-espera']);
+
+        const [expedienteResult] = await conn.execute(
+            'INSERT INTO expedientes (numero_expediente, fecha_creacion, descripcion, tipo_tramite_id, estado) VALUES (?, ?, ?, ?, ?)',
+            [numeroExpediente, fechaHora, descripcion, tipoTramite, 'en-espera']
+        );
         const expedienteId = expedienteResult.insertId;
-        const [acontecimientoResult] = await conn.execute('INSERT INTO acontecimientos (expediente_id, fecha_hora, descripcion, nuevo_estado) VALUES (?, ?, ?, ?)', [expedienteId, fechaHora, 'Creación de expediente inicial.', 'en-espera']);
+
+        const [acontecimientoResult] = await conn.execute(
+            'INSERT INTO acontecimientos (expediente_id, fecha_hora, descripcion, nuevo_estado) VALUES (?, ?, ?, ?)',
+            [expedienteId, fechaHora, 'Creación de expediente inicial.', 'en-espera']
+        );
         const acontecimientoId = acontecimientoResult.insertId;
+
         for (let i = 0; i < fotos.length; i++) {
             const foto = fotos[i];
             const nombreArchivo = `${numeroExpediente}-${acontecimientoId}-${i + 1}${path.extname(foto.originalname)}`;
-            fs.writeFileSync(path.join(uploadsDir, nombreArchivo), foto.buffer);
-            await conn.execute('INSERT INTO fotos (expediente_id, acontecimiento_id, nombre_archivo) VALUES (?, ?, ?)', [expedienteId, acontecimientoId, nombreArchivo]);
+            const rutaArchivo = path.join(uploadsDir, nombreArchivo); // Creamos la ruta completa
+            fs.writeFileSync(rutaArchivo, foto.buffer);
+
+            // --- LA CORRECCIÓN ESTÁ AQUÍ ---
+            // Ahora la consulta SQL incluye 4 columnas y le pasamos los 4 valores correspondientes.
+            await conn.execute(
+                'INSERT INTO fotos (expediente_id, acontecimiento_id, nombre_archivo, ruta_archivo) VALUES (?, ?, ?, ?)',
+                [expedienteId, acontecimientoId, nombreArchivo, rutaArchivo]
+            );
         }
+
         await conn.commit();
-        res.status(201).json({ mensaje: 'Expediente guardado con éxito.', numero_expediente: numeroExpediente });
+        res.status(201).json({
+            mensaje: 'Expediente guardado con éxito.',
+            numero_expediente: numeroExpediente
+        });
+
     } catch (error) {
-        await conn.rollback(); console.error('Error al procesar el expediente:', error);
+        await conn.rollback();
+        console.error('Error al procesar el expediente:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });
     } finally {
-        conn.release();
+        if (conn) conn.release();
     }
 });
 
@@ -304,6 +327,71 @@ app.get('/api/tramites/:id', async (req, res) => {
         conn.release();
     }
 });
+
+// --- Endpoint para EDITAR un acontecimiento ---
+app.put('/api/acontecimientos/:id', async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+        const { id } = req.params;
+        const { descripcion } = req.body;
+
+        if (!descripcion) {
+            return res.status(400).json({ error: 'La descripción no puede estar vacía.' });
+        }
+
+        await conn.execute(
+            'UPDATE acontecimientos SET descripcion = ? WHERE id = ?',
+            [descripcion, id]
+        );
+
+        res.status(200).json({ mensaje: 'Acontecimiento actualizado con éxito.' });
+
+    } catch (error) {
+        console.error('Error al actualizar el acontecimiento:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+
+// --- Endpoint para ELIMINAR un acontecimiento ---
+app.delete('/api/acontecimientos/:id', async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+        const { id } = req.params;
+        await conn.beginTransaction();
+
+        // 1. Buscar todos los archivos asociados al acontecimiento
+        const [fotos] = await conn.execute('SELECT nombre_archivo FROM fotos WHERE acontecimiento_id = ?', [id]);
+        
+        // 2. Borrar los archivos del disco
+        for (const foto of fotos) {
+            const rutaArchivo = path.join(uploadsDir, foto.nombre_archivo);
+            if (fs.existsSync(rutaArchivo)) {
+                fs.unlinkSync(rutaArchivo);
+                console.log(`Archivo eliminado: ${foto.nombre_archivo}`);
+            }
+        }
+        
+        // 3. Borrar los registros de los archivos de la base de datos
+        await conn.execute('DELETE FROM fotos WHERE acontecimiento_id = ?', [id]);
+
+        // 4. Borrar el acontecimiento en sí
+        await conn.execute('DELETE FROM acontecimientos WHERE id = ?', [id]);
+
+        await conn.commit();
+        res.status(200).json({ mensaje: 'Acontecimiento y sus archivos eliminados con éxito.' });
+
+    } catch (error) {
+        await conn.rollback();
+        console.error('Error al eliminar el acontecimiento:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Servidor escuchando en http://localhost:${port}`);

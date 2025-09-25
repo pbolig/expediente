@@ -19,7 +19,7 @@
             <h2>Registrar Nuevo Expediente</h2>
             <form id="formulario-expediente">
                 <label for="tipo-tramite">Tipo de Trámite:</label>
-                <select id="tipo-tramite" required>
+                <select id="tipo-tramite">
                     </select>
 
                 <div class="campo-con-icono">
@@ -110,6 +110,7 @@
 
                         <div id="fotos-previsualizacion-edicion"></div>
                         
+                        <!--
                         <label for="estado-edicion">Cambiar Estado:</label>
 
                         <select id="estado-edicion" name="nuevoEstado">
@@ -117,7 +118,27 @@
                             <option value="iniciado">Iniciado</option>
                             <option value="finalizado">Finalizado</option>
                         </select>
-                        
+                        -->
+
+                        <!-- Selección de estado -->
+                         <div class="section">                            
+                            <label>Cambiar Estado:</label>
+                            <div class="toggle-group">
+                                <div class="toggle-option">
+                                    <input type="radio" id="toggle-espera" name="estado-toggle" value="en-espera" checked>
+                                    <label for="toggle-espera">En Espera</label>
+                                </div>
+                                <div class="toggle-option">
+                                    <input type="radio" id="toggle-iniciado" name="estado-toggle" value="iniciado">
+                                    <label for="toggle-iniciado">Iniciado</label>
+                                </div>
+                                <div class="toggle-option">
+                                    <input type="radio" id="toggle-finalizado" name="estado-toggle" value="finalizado">
+                                    <label for="toggle-finalizado">Finalizado</label>
+                                </div>
+                            </div>
+                        </div>
+                        <!------------------------->
 
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Guardar Cambios</button>

@@ -1,16 +1,13 @@
 /* ==========================================================================
    Estilos Generales y Layout Principal
    ========================================================================== */
-
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
-    padding: 0;
     background-color: #f4f7f6;
     color: #333;
     line-height: 1.6;
 }
-
 header {
     background-color: #005A9C;
     color: white;
@@ -18,13 +15,11 @@ header {
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
 main {
     padding: 1rem;
     max-width: 900px;
-    margin: 2rem auto; /* Aumentamos el margen superior para separar del header */
+    margin: 2rem auto;
 }
-
 section {
     background-color: white;
     padding: 1.5rem;
@@ -33,7 +28,6 @@ section {
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     border: 1px solid #e0e0e0;
 }
-
 footer {
     background-color: #343a40;
     color: #f8f9fa;
@@ -41,30 +35,17 @@ footer {
     padding: 2rem 1rem;
     margin-top: 2rem;
     border-top: 4px solid #005A9C;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-}
-
-footer p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #ced4da;
 }
 
 /* ==========================================================================
-   Tipografía
+   Tipografía y Botones
    ========================================================================== */
-
 h2, h3 {
     color: #005A9C;
     border-bottom: 2px solid #eef2f5;
     padding-bottom: 0.5rem;
     margin-top: 0;
 }
-
-/* ==========================================================================
-   Botones
-   ========================================================================== */
-
 .btn {
     display: inline-block;
     padding: 10px 20px;
@@ -75,91 +56,48 @@ h2, h3 {
     cursor: pointer;
     text-align: center;
     text-decoration: none;
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease;
+    transition: all 0.2s ease;
 }
-
 .btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
-
-.btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.btn-primary {
-    background-color: #007BFF;
-    color: white;
-}
-.btn-primary:hover {
-    background-color: #0056b3;
-}
-
-.btn-secondary {
-    background-color: #6c757d;
-    color: white;
-}
-.btn-secondary:hover {
-    background-color: #5a6268;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-}
-.btn-danger:hover {
-    background-color: #c82333;
-}
-
-.btn-outline {
-    background-color: transparent;
-    color: #007BFF;
-    border: 2px solid #007BFF;
-    padding: 8px 18px; /* Ajuste de padding para botones con borde */
-}
-.btn-outline:hover {
-    background-color: #007BFF;
-    color: white;
-}
+.btn-primary { background-color: #007BFF; color: white; }
+.btn-primary:hover { background-color: #0056b3; }
+.btn-secondary { background-color: #6c757d; color: white; }
+.btn-secondary:hover { background-color: #5a6268; }
+.btn-danger { background-color: #dc3545; color: white; }
+.btn-danger:hover { background-color: #c82333; }
+.btn-outline { background-color: transparent; color: #007BFF; border: 2px solid #007BFF; padding: 8px 18px; }
+.btn-outline:hover { background-color: #007BFF; color: white; }
 
 /* ==========================================================================
-   Formularios
+   Formulario de Búsqueda y Filtros
    ========================================================================== */
-
-/* --- Estilos Definitivos para el Formulario de Búsqueda --- */
-
 .form-busqueda-mejorado {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 1rem;
-    margin-bottom: 1.5rem; /* Espacio antes de los resultados */
+    margin-bottom: 1.5rem;
 }
-
 .campo-form {
     display: flex;
     flex-direction: column;
-    flex: 1 1 200px; /* Tamaño base para cada campo */
+    flex: 1 1 200px;
 }
-
 .campo-form:first-of-type {
-    flex: 2 1 250px; /* El campo de texto crecerá más */
+    flex: 2 1 250px;
 }
-
 .campo-form label {
     font-weight: 500;
     font-size: 0.9rem;
     margin-bottom: 0.25rem;
 }
-
-/* Forzamos una altura consistente para todos los campos */
 .form-busqueda-mejorado input,
 .form-busqueda-mejorado .choices {
     height: 45px;
 }
-
-/* Aseguramos que el interior del combo se ajuste a la altura */
 .form-busqueda-mejorado .choices__inner {
     min-height: 45px;
     border-radius: 6px;
@@ -169,29 +107,24 @@ h2, h3 {
 .form-busqueda-mejorado .choices__list--single {
     padding: 6px 16px 4px 10px;
 }
-
-/* El botón se alinea y se adapta */
 .form-busqueda-mejorado button {
     height: 45px;
     flex-shrink: 0;
 }
-
-/* Comportamiento para pantallas pequeñas */
 @media (max-width: 900px) {
     .form-busqueda-mejorado button {
-        flex-basis: 100%; /* El botón se va a una nueva línea */
+        flex-basis: 100%;
     }
 }
 
-
-/* --- Estilos para campos de formulario generales --- */
-
+/* ==========================================================================
+   Formularios Generales y Acciones
+   ========================================================================== */
 form label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: bold;
 }
-
 form input[type="text"],
 form textarea {
     width: 100%;
@@ -201,204 +134,21 @@ form textarea {
     box-sizing: border-box;
     font-size: 1rem;
 }
-
-/* Contenedor para botones de Guardar/Cancelar */
 .form-actions {
     margin-top: 1.5rem;
     display: flex;
     gap: 10px;
     justify-content: flex-end;
 }
-
-/* ==========================================================================
-   Resultados y Listas
-   ========================================================================== */
-
-#resultados-busqueda {
-    margin-top: 1.5rem; /* Espacio sobre la lista de resultados */
-}
-
-.expediente-item, .acontecimiento-item {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    background: #fdfdfd;
-}
-
-.acontecimiento-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-.acontecimiento-header h4 { margin: 0; }
-.fecha { color: #666; font-size: 0.9em; }
-
-/* ==========================================================================
-   Paginación
-   ========================================================================== */
-
-.paginacion {
-    display: flex;
-    flex-direction: column; /* Apila controles e info */
-    justify-content: center;
-    align-items: center;
-    margin-top: 1.5rem;
-}
-
-.pagination-controls {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
-
-.btn-paginacion {
-    border: 1px solid #dee2e6;
-    background-color: #fff;
-    color: #007BFF;
-    padding: 10px 15px;
-    font-size: 1rem;
-    font-weight: 500;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-}
-
-.btn-paginacion:hover:not(:disabled) {
-    background-color: #e9ecef;
-    border-color: #adb5bd;
-    transform: translateY(-2px);
-}
-
-.btn-paginacion:active:not(:disabled) {
-    transform: scale(0.95);
-}
-
-.btn-paginacion.active, 
-.btn-paginacion:disabled {
-    background-color: #007BFF;
-    border-color: #007BFF;
-    color: white;
-    cursor: default;
-    transform: none;
-}
-
-.pagination-info {
-    text-align: center;
-    color: #6c757d;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-}
-
-/* ==========================================================================
-   Componentes (Acordeón, Previsualización, Modal)
-   ========================================================================== */
-
-/* --- Acordeón --- */
-.accordion-header {
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    user-select: none;
-}
-.accordion-icon {
-    font-size: 1.5rem;
-    font-weight: bold;
-    transition: transform 0.3s ease;
-}
-.accordion-header.active .accordion-icon {
-    transform: rotate(45deg);
-}
-.accordion-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease-out;
-    padding: 0 1rem;
-}
-
-
-/* --- Previsualización de Archivos --- */
-#fotos-previsualizacion, #fotos-previsualizacion-edicion {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 1rem;
-}
-.previsualizacion-item {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-}
-.previsualizacion-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.btn-eliminar-preview {
-    position: absolute; top: 2px; right: 2px;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white; border: none; border-radius: 50%;
-    width: 20px; height: 20px; cursor: pointer;
-    line-height: 20px; font-size: 12px; padding: 0;
-}
-.previsualizacion-item .file-icon {
-    font-size: 40px;
-}
-
-
-/* --- Modal --- */
-.modal {
-    display: none; position: fixed; z-index: 1000;
-    left: 0; top: 0; width: 100%; height: 100%;
-    overflow: auto; background-color: rgba(0,0,0,0.8);
-}
-.modal-content {
-    background-color: #fefefe; margin: 10% auto; padding: 20px;
-    border: 1px solid #888; width: 80%; max-width: 700px; border-radius: 8px;
-}
-.close-btn {
-    color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;
-}
-.galeria-imagenes {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px; width: 100%;
-}
-.contenedor-imagen {
-    border: 1px solid #e0e0e0; border-radius: 8px;
-    overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    display: flex; flex-direction: column; background-color: #fff;
-}
-.contenedor-imagen img {
-    width: 100%; height: 120px; object-fit: cover; display: block;
-}
-.info-archivo {
-    padding: 8px; font-size: 0.85rem; text-align: center;
-}
-.nombre-archivo {
-    display: block; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis;
-    margin-bottom: 5px;
-}
-
 .campo-con-icono {
     display: flex;
     align-items: center;
-    gap: 10px; /* Espacio entre la etiqueta y el botón */
+    gap: 10px;
 }
-
 .btn-microfono {
     background: #f0f0f0;
     border: 1px solid #ccc;
-    border-radius: 50%; /* Lo hacemos redondo */
+    border-radius: 50%;
     width: 40px;
     height: 40px;
     cursor: pointer;
@@ -409,22 +159,128 @@ form textarea {
     align-items: center;
     transition: all 0.2s ease;
 }
-
-.btn-microfono:hover {
-    background-color: #e0e0e0;
-}
-
-/* Estilo para cuando está escuchando */
+.btn-microfono:hover { background-color: #e0e0e0; }
 .btn-microfono.escuchando {
-    background-color: #ff4136; /* Color rojo */
+    background-color: #ff4136;
     color: white;
     border-color: #ff4136;
-    box-shadow: 0 0 15px rgba(255, 65, 54, 0.7); /* Efecto de brillo */
     animation: pulso-rojo 1.5s infinite;
 }
-
 @keyframes pulso-rojo {
     0% { box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7); }
     70% { box-shadow: 0 0 15px 10px rgba(255, 65, 54, 0); }
     100% { box-shadow: 0 0 0 0 rgba(255, 65, 54, 0); }
+}
+
+/* ==========================================================================
+   Resultados y Listas
+   ========================================================================== */
+#resultados-busqueda {
+    margin-top: 1.5rem;
+}
+.expediente-item, .acontecimiento-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #fdfdfd;
+}
+.acontecimiento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.fecha { color: #666; font-size: 0.9em; }
+
+/* ==========================================================================
+   Componentes (Paginación, Acordeón, Previsualización, Modal)
+   ========================================================================== */
+/* --- Paginación --- */
+.paginacion { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 1.5rem; }
+.pagination-controls { display: flex; gap: 8px; justify-content: center; }
+.btn-paginacion { border: 1px solid #dee2e6; background-color: #fff; color: #007BFF; padding: 10px 15px; font-size: 1rem; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.2s ease-in-out; }
+.btn-paginacion:hover:not(:disabled) { background-color: #e9ecef; border-color: #adb5bd; transform: translateY(-2px); }
+.btn-paginacion:active:not(:disabled) { transform: scale(0.95); }
+.btn-paginacion.active, .btn-paginacion:disabled { background-color: #007BFF; border-color: #007BFF; color: white; cursor: default; transform: none; }
+.pagination-info { text-align: center; color: #6c757d; margin-top: 1rem; font-size: 0.9rem; }
+
+/* --- Acordeón --- */
+.accordion-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+.accordion-icon { font-size: 1.5rem; font-weight: bold; transition: transform 0.3s ease; }
+.accordion-header.active .accordion-icon { transform: rotate(45deg); }
+.accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; padding: 0 1rem; }
+
+/* --- Previsualización de Archivos --- */
+#fotos-previsualizacion, #fotos-previsualizacion-edicion { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1rem; }
+.previsualizacion-item { position: relative; width: 100px; height: 100px; border: 1px solid #ddd; border-radius: 4px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+.previsualizacion-item img { width: 100%; height: 100%; object-fit: cover; }
+.btn-eliminar-preview { position: absolute; top: 2px; right: 2px; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; font-size: 12px; padding: 0; }
+.previsualizacion-item .file-icon { font-size: 40px; }
+
+/* --- Modal y Galería de Archivos --- */
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
+.modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 700px; border-radius: 8px; }
+.close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+.galeria-imagenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; width: 100%; }
+.contenedor-imagen { border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; background-color: #fff; }
+.contenedor-imagen img { width: 100%; height: 120px; object-fit: cover; display: block; }
+.info-archivo { padding: 8px; font-size: 0.85rem; text-align: center; }
+.nombre-archivo { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+
+/* 1. Evita que la lista del combo se ensanche con texto largo */
+.choices__list--dropdown .choices__item--choice {
+    white-space: normal; /* Permite que el texto de la opción pase a la siguiente línea */
+    word-break: break-word; /* Fuerza el corte de palabras si es necesario */
+}
+
+/* 2. Agrega espacio entre el micrófono/label y el textarea de descripción */
+#registro-expediente textarea#descripcion {
+    margin-top: 1rem;
+}
+
+.choices.is-open .choices__list--dropdown {
+    width: 100% !important;/* Forzamos a que ocupe el 100% del ancho del contenedor original */
+    box-sizing: border-box; /* Asegura que el padding y borde no lo hagan más ancho */
+}
+
+#btn-guardar {
+    margin-top: 0.75rem;
+}
+
+
+.toggle-group {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 4px;
+    width: fit-content;
+}
+
+.toggle-option {
+    position: relative;
+}
+
+.toggle-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-option label {
+    display: block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #7fa5d9;
+    white-space: nowrap;
+}
+
+.toggle-option input[type="radio"]:checked + label {
+    background: white;
+    color: #1e293b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

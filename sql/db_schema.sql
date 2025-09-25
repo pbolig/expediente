@@ -15,19 +15,6 @@ CREATE DATABASE IF NOT EXISTS `expedientes_db` DEFAULT CHARACTER SET utf8mb4 COL
 USE `expedientes_db`;
 
 -- ---------------------------------------------------------------------
---  Tabla `tipos_tramite`
--- ---------------------------------------------------------------------
--- Esta tabla almacena los tipos de trámite, que son un catálogo
--- que se definirá más adelante, pero lo creamos para tener
--- una relación con la tabla 'expedientes'.
-DROP TABLE IF EXISTS `tipos_tramite`;
-CREATE TABLE `tipos_tramite` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `nombre` VARCHAR(100) NOT NULL UNIQUE,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ---------------------------------------------------------------------
 --  Tabla `expedientes`
 -- ---------------------------------------------------------------------
 DROP TABLE IF EXISTS `expedientes`;
@@ -41,6 +28,19 @@ CREATE TABLE `expedientes` (
   `fecha_modificacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`tipo_tramite_id`) REFERENCES `tipos_tramite`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+--  Tabla `tipos_tramite`
+-- ---------------------------------------------------------------------
+-- Esta tabla almacena los tipos de trámite, que son un catálogo
+-- que se definirá más adelante, pero lo creamos para tener
+-- una relación con la tabla 'expedientes'.
+DROP TABLE IF EXISTS `tipos_tramite`;
+CREATE TABLE `tipos_tramite` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(100) NOT NULL UNIQUE,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
@@ -80,11 +80,11 @@ CREATE TABLE `acontecimientos` (
 -- Inserción de datos iniciales para la tabla `tipos_tramite`.
 -- La sentencia ON DUPLICATE KEY UPDATE evita errores si ya existen los registros.
 INSERT INTO `tipos_tramite` (`nombre`) VALUES
-('Trámite Regional / Supervisión'),
-('Trámite Docente'),
-('Trámite Estudiante Enfermería'),
-('Trámite Estudiante Tec. Digitales'),
-('Trámite Estudiante Hig. Seguridad');
+('Regional / Supervisión'),
+('Docente'),
+('Estudiante Enfermería'),
+('Estudiante Tec. Digitales'),
+('Estudiante Hig. Seguridad');
 
 -- ---------------------------------------------------------------------
 --  Restaurar configuración de SQL
