@@ -1,4 +1,5 @@
-# .gitignore
+.gitignore
+.git
 node_modules/
 .env
 uploads/
@@ -6,3 +7,5 @@ uploads/
 .DS_Store
 dist/
 coverage/
+Dockerfile
+docker-compose.yml

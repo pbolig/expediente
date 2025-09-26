@@ -11,10 +11,10 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: 'Juani2008**',
-    database: 'expedientes_db'
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'Juani2008**',
+    database: process.env.DB_NAME || 'expedientes_db'
 };
 
 let pool;
