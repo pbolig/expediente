@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Servicio de la aplicación Node.js
+  backend:
+    build: . # Construye la imagen usando el Dockerfile de este directorio
+    container_name: expedientes-app
+    restart: always
+    ports:
+      - "3000:3000" # Mapea el puerto 3000 del VPS al puerto 3000 del contenedor
+    environment:
+      - DB_HOST=db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    depends_on:
+      - db # Le dice a este servicio que espere a que el servicio 'db' esté listo
+
+  # Servicio de la Base de Datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: expedientes-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql # Persiste los datos de la BD en un volumen
+
+volumes:
+  db_data:
