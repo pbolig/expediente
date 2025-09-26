@@ -69,6 +69,7 @@ CREATE TABLE `acontecimientos` (
   `fecha_hora` DATETIME NOT NULL,
   `descripcion` TEXT NOT NULL,
   `nuevo_estado` ENUM('en-espera', 'iniciado', 'finalizado'),
+  `num_secuencial` INT NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`expediente_id`) REFERENCES `expedientes`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

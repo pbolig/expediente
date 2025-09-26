@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fecha = new Date(acontecimiento.fecha_hora).toLocaleString('es-ES');
                 div.innerHTML = `
                     <div class="acontecimiento-header">
-                        <h4>Acontecimiento #${acontecimiento.num_acontecimiento}</h4> 
+                        <h4>Acontecimiento #${acontecimiento.num_secuencial}</h4>
                         <span class="fecha">${fecha}</span>
                     </div>
                     <div class="acontecimiento-content">
