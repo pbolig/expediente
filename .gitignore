@@ -1,8 +1,12 @@
-# Dependencias.
+# Dependencias
+# Ignora la carpeta de módulos de Node en la raíz del proyecto
 /server/node_modules
+
+# Archivos de usuarios
+# Ignora la carpeta de archivos subidos
 /uploads
 
-# Archivos de build y producciÃ³n
+# Archivos de build y producción
 /dist
 /build
 
@@ -17,10 +21,10 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Archivos de entorno (Â¡MUY IMPORTANTE!)
+# Archivos de entorno (¡MUY IMPORTANTE!)
 .env
 .env.*
 
-# Archivos de IDE
+# Archivos de IDE y configuración local
 .idea
 .vscode
