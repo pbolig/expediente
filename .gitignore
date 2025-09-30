@@ -5,6 +5,7 @@
 # Archivos de usuarios
 # Ignora la carpeta de archivos subidos
 /uploads
+/DATOS
 
 # Archivos de build y producción
 /dist

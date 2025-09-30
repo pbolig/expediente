@@ -56,6 +56,7 @@ app.post('/api/tramites', upload.any(), async (req, res) => {
             'INSERT INTO expedientes (numero_expediente, fecha_creacion, descripcion, tipo_tramite_id, estado) VALUES (?, ?, ?, ?, ?)',
             [numeroExpediente, fechaHora, descripcion, tipoTramite, 'en-espera']
         );
+
         const expedienteId = expedienteResult.insertId;
 
         // --- CORRECCIÓN AQUÍ ---
@@ -64,27 +65,39 @@ app.post('/api/tramites', upload.any(), async (req, res) => {
         const [acontecimientoResult] = await conn.execute(
             'INSERT INTO acontecimientos (expediente_id, fecha_hora, descripcion, nuevo_estado, num_secuencial) VALUES (?, ?, ?, ?, ?)',
             [expedienteId, fechaHora, 'Creación de expediente inicial.', 'en-espera', 1]
-        );
+        );        
+
         const acontecimientoId = acontecimientoResult.insertId;
+
+        const year = fechaHora.getFullYear().toString();
+        const month = (fechaHora.getMonth() + 1).toString().padStart(2, '0');
+        const day = fechaHora.getDate().toString().padStart(2, '0');
+
+        const datePath = path.join(year, month, day);
+        const fullDateDirPath = path.join(uploadsDir, datePath);
+
+        // Crea el directorio si no existe
+        fs.mkdirSync(fullDateDirPath, { recursive: true });
 
         for (let i = 0; i < fotos.length; i++) {
             const foto = fotos[i];
-            const nombreArchivo = `${numeroExpediente}-${acontecimientoId}-${i + 1}${path.extname(foto.originalname)}`;
-            const rutaArchivo = path.join(uploadsDir, nombreArchivo);
-            fs.writeFileSync(rutaArchivo, foto.buffer);
+            const uniqueSuffix = `${acontecimientoId}-${i + 1}${path.extname(foto.originalname)}`;
+            const baseFilename = `${numeroExpediente}-${uniqueSuffix}`;
+            
+            // La ruta que guardamos en la BD ahora incluye las subcarpetas
+            const nombreArchivoConRuta = path.join(datePath, baseFilename);
+            const rutaAbsolutaArchivo = path.join(uploadsDir, nombreArchivoConRuta);
+
+            fs.writeFileSync(rutaAbsolutaArchivo, foto.buffer);
 
             await conn.execute(
                 'INSERT INTO fotos (expediente_id, acontecimiento_id, nombre_archivo, ruta_archivo) VALUES (?, ?, ?, ?)',
-                [expedienteId, acontecimientoId, nombreArchivo, rutaArchivo]
+                [expedienteId, acontecimientoId, nombreArchivoConRuta, rutaAbsolutaArchivo]
             );
         }
 
         await conn.commit();
-        res.status(201).json({
-            mensaje: 'Expediente guardado con éxito.',
-            numero_expediente: numeroExpediente
-        });
-
+        res.status(201).json({ mensaje: 'Expediente guardado con éxito.', numero_expediente: numeroExpediente });
     } catch (error) {
         await conn.rollback();
         console.error('Error al procesar el expediente:', error);
@@ -210,18 +223,44 @@ app.post('/api/acontecimientos/:id', upload.any(), async (req, res) => {
         const [countRows] = await conn.execute('SELECT COUNT(*) as total FROM acontecimientos WHERE expediente_id = ?', [id]);
         const nuevoNumeroSecuencial = countRows[0].total + 1;
 
+        const fechaHora = new Date()
+
         // 2. Insertamos el nuevo acontecimiento CON su número secuencial.
         const [acontecimientoResult] = await conn.execute(
             'INSERT INTO acontecimientos (expediente_id, fecha_hora, descripcion, nuevo_estado, num_secuencial) VALUES (?, ?, ?, ?, ?)',
             [id, new Date(), descripcionAcontecimiento, nuevoEstado, nuevoNumeroSecuencial]
         );
+
         const acontecimientoId = acontecimientoResult.insertId;
 
         await conn.execute('UPDATE expedientes SET estado = ? WHERE id = ?', [nuevoEstado, id]);
 
         if (fotos && fotos.length > 0) {
+            // --- LÓGICA DE DIRECTORIOS POR FECHA ---
+            const year = fechaHora.getFullYear().toString();
+            const month = (fechaHora.getMonth() + 1).toString().padStart(2, '0');
+            const day = fechaHora.getDate().toString().padStart(2, '0');
+    
+            const datePath = path.join(year, month, day);
+            const fullDateDirPath = path.join(uploadsDir, datePath);
+    
+            // Crea el directorio si no existe
+            fs.mkdirSync(fullDateDirPath, { recursive: true });
+
             for (let i = 0; i < fotos.length; i++) {
-                // ... (el resto de la lógica de archivos no cambia) ...
+                const foto = fotos[i];
+                const uniqueSuffix = `${acontecimientoId}-${i + 1}${path.extname(foto.originalname)}`;
+                const baseFilename = `${numeroExpediente}-${uniqueSuffix}`;
+
+                const nombreArchivoConRuta = path.join(datePath, baseFilename);
+                const rutaAbsolutaArchivo = path.join(uploadsDir, nombreArchivoConRuta);
+
+                fs.writeFileSync(rutaAbsolutaArchivo, foto.buffer);
+
+                await conn.execute(
+                    'INSERT INTO fotos (expediente_id, acontecimiento_id, nombre_archivo, ruta_archivo) VALUES (?, ?, ?, ?)',
+                    [id, acontecimientoId, nombreArchivoConRuta, rutaAbsolutaArchivo]
+                );
             }
         }
         await conn.commit();
