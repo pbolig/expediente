@@ -426,6 +426,61 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('No se pudo conectar con el servidor.');
         }
     };
+
+    const procesarYAnadirArchivos = async (archivos, contenedor, arrayDestino) => {
+        const opcionesCompresion = {
+            maxSizeMB: 1,          // Tamaño máximo del archivo en MB
+            maxWidthOrHeight: 1920, // Redimensiona la imagen si es más ancha o alta de 1920px
+            useWebWorker: true,    // Usa un hilo secundario para no bloquear la interfaz
+            fileType: 'image/jpeg',// Convierte a JPG
+        };
+
+        for (const archivo of archivos) {
+            let archivoParaSubir = archivo;
+
+            // Si el archivo es una imagen, la procesamos
+            if (archivo.type.startsWith('image/')) {
+                try {
+                    console.log(`Comprimiendo imagen: ${archivo.name}`);
+                    const archivoComprimido = await imageCompression(archivo, opcionesCompresion);
+                    // Le ponemos el nombre original al nuevo archivo comprimido
+                    archivoParaSubir = new File([archivoComprimido], archivo.name, { type: 'image/jpeg' });
+                    console.log(`Compresión exitosa. Nuevo tamaño: ${Math.round(archivoParaSubir.size / 1024)} KB`);
+                } catch (error) {
+                    console.error('Error al comprimir la imagen:', error);
+                    // Si falla la compresión, usamos el archivo original
+                    archivoParaSubir = archivo;
+                }
+            }
+
+            // Añadimos el archivo (original o comprimido) al array y creamos la previsualización
+            arrayDestino.push(archivoParaSubir);
+            
+            const div = document.createElement('div');
+            div.classList.add('previsualizacion-item');
+            if (esImagen(archivoParaSubir.name)) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(archivoParaSubir);
+                div.appendChild(img);
+            } else {
+                div.innerHTML = `<span class="file-icon">${obtenerIconoArchivo(archivoParaSubir.name)}</span>`;
+            }
+            const btnEliminar = document.createElement('button');
+            btnEliminar.classList.add('btn-eliminar-preview');
+            btnEliminar.innerHTML = '×';
+            btnEliminar.onclick = () => {
+                const index = arrayDestino.indexOf(archivoParaSubir);
+                if (index > -1) {
+                    arrayDestino.splice(index, 1);
+                    div.remove();
+                    if (contenedor.id === 'fotos-previsualizacion-edicion') actualizarAlturaAcordeon();
+                }
+            };
+            div.appendChild(btnEliminar);
+            contenedor.appendChild(div);
+            if (contenedor.id === 'fotos-previsualizacion-edicion') actualizarAlturaAcordeon();
+        }
+    };
     
     // --- Event Listeners ---
     
@@ -546,10 +601,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     btnTomarFoto.addEventListener('click', () => inputFoto.click());
-    inputFoto.addEventListener('change', (e) => manejarPrevisualizacionArchivos(e.target.files, fotosPrevisualizacion, fotosTomadas));
+    inputFoto.addEventListener('change', (e) => {
+        procesarYAnadirArchivos(e.target.files, fotosPrevisualizacion, fotosTomadas);
+        e.target.value = '';
+    });
     
     btnAdjuntarEdicion.addEventListener('click', () => inputFotoEdicion.click());
-    inputFotoEdicion.addEventListener('change', (e) => manejarPrevisualizacionArchivos(e.target.files, fotosPrevisualizacionEdicion, fotosEdicion));
+    inputFotoEdicion.addEventListener('change', (e) => {
+        procesarYAnadirArchivos(e.target.files, fotosPrevisualizacionEdicion, fotosEdicion);
+        e.target.value = ''; // Limpiamos el input
+    });
 
     closeBtn.addEventListener('click', () => modalFotos.style.display = 'none');
     window.addEventListener('click', (event) => {
