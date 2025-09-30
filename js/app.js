@@ -1,6 +1,10 @@
 // js/app.js (Versión Final y Completa)
 
-const API_URL = 'http://localhost:3000';
+//desarrollo
+//const API_URL = 'http://localhost:3000';
+
+//produccion
+const API_URL = '';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Referencias a elementos del DOM ---
