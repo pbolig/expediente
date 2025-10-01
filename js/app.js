@@ -49,7 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const choicesEstado = new Choices(filtroEstado, choicesOptions);
     const choicesTipoTramite = new Choices(filtroTipoTramite, choicesOptions);
     const choicesFormularioTramite = new Choices(selectTipoTramite, { ...choicesOptions, searchEnabled: true });
-    
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
     // --- Variables de Estado ---
     const fotosTomadas = [];
     const fotosEdicion = [];
@@ -97,12 +98,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Comprobamos si el navegador es compatible
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
+    
+    if (SpeechRecognition && !isSafari) {
         const recognition = new SpeechRecognition();
         let isListening = false;
+
+        // Configuración del reconocimiento (sin cambios)
         recognition.lang = 'es-AR';
         recognition.continuous = true;
         recognition.interimResults = false;
+
+        // Eventos (sin cambios)
         recognition.onresult = (event) => {
             let textoFinal = '';
             for (const resultado of event.results) {
@@ -110,11 +116,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             descripcionTextarea.value += (descripcionTextarea.value.length > 0 ? ' ' : '') + textoFinal;
         };
-        recognition.onerror = (event) => console.error('Error en el reconocimiento de voz:', event.error);
+        recognition.onerror = (event) => {
+            console.error('Error en el reconocimiento de voz:', event.error);
+        };
         recognition.onend = () => {
             isListening = false;
             btnVoz.classList.remove('escuchando');
         };
+
+        // Manejador del clic en el botón del micrófono (sin cambios)
         btnVoz.addEventListener('click', () => {
             if (isListening) {
                 recognition.stop();
@@ -128,8 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
     } else {
-        console.warn('API de Reconocimiento de Voz no compatible.');
+        // 3. Si no es compatible O SI ES SAFARI, ocultamos el botón
+        console.warn('API de Reconocimiento de Voz no compatible o es Safari. Ocultando botón.');
         btnVoz.style.display = 'none';
     }
 

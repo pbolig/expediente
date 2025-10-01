@@ -16,6 +16,8 @@ services:
     build: .
     container_name: expedientes-app
     restart: always
+    volumes:
+      - ./uploads:/usr/src/app/uploads
     environment:
       - DB_HOST=db
       - DB_USER=${DB_USER}
