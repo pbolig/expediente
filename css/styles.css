@@ -284,3 +284,33 @@ form textarea {
     color: #1e293b;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+#form-modal-edicion textarea {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 1rem;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between; /* Alinea el título a la izquierda y el botón a la derecha */
+    align-items: center;
+}
+
+.btn-header {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 2rem; /* Tamaño del ícono */
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.btn-header:hover {
+    transform: scale(1.1);
+}

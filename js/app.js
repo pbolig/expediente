@@ -6,6 +6,7 @@ const API_URL = window.location.hostname === 'localhost'
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Referencias a elementos del DOM ---
+    const btnHome = document.getElementById('btn-home');
     const registroExpedienteSection = document.getElementById('registro-expediente');
     const inputFoto = document.getElementById('input-foto');
     const fotosPrevisualizacion = document.getElementById('fotos-previsualizacion');
@@ -34,6 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtroTipoTramite = document.getElementById('filtro-tipo-tramite');
     const btnVoz = document.getElementById('btn-reconocimiento-voz');
     const descripcionTextarea = document.getElementById('descripcion');
+
+    // --- REFERENCIAS PARA EL MODAL DE EDICIÓN ---
+    const modalEdicion = document.getElementById('modal-edicion');
+    const formModalEdicion = document.getElementById('form-modal-edicion');
+    const descripcionModal = document.getElementById('descripcion-modal');
+    const acontecimientoIdModal = document.getElementById('acontecimiento-id-modal');
+    const btnCancelarModal = document.getElementById('btn-cancelar-modal');
+    const closeBtnEdicion = document.querySelector('.close-btn-edicion');
 
     // --- Inicialización de Choices.js ---
     const choicesOptions = { itemSelectText: '', searchEnabled: false, shouldSort: false, allowHTML: true };
@@ -64,6 +73,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) { console.error('Error al cargar tipos de trámite:', error); }
     };
+
+    const resetApp = () => {
+        // 1. Mostrar las secciones principales y ocultar la de edición
+        registroExpedienteSection.style.display = 'block';
+        panelConsulta.style.display = 'block';
+        panelEdicion.style.display = 'none';
+
+        // 2. Limpiar el campo de texto y los resultados
+        campoBusqueda.value = '';
+        resultadosBusqueda.innerHTML = '';
+        document.getElementById('paginacion-busqueda').innerHTML = '';
+
+
+        // 3. Resetear los combos de Choices.js a su valor por defecto
+        choicesEstado.setChoiceByValue('');
+        choicesTipoTramite.setChoiceByValue('');
+
+        // 4. Ejecutar una búsqueda inicial sin filtros
+        buscarExpedientes('', '', '', 1);
+    };
+
 
     // Comprobamos si el navegador es compatible
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -483,6 +513,40 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- Event Listeners ---
+
+    btnHome.addEventListener('click', resetApp);
+
+    const cerrarModalEdicion = () => {
+        modalEdicion.style.display = 'none';
+    };
+    closeBtnEdicion.addEventListener('click', cerrarModalEdicion);
+    btnCancelarModal.addEventListener('click', cerrarModalEdicion);
+
+    // Guardar los cambios al enviar el formulario del modal
+    formModalEdicion.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = acontecimientoIdModal.value;
+        const nuevaDescripcion = descripcionModal.value;
+        const expedienteId = expedienteIdEdicion.value;
+
+        try {
+            const response = await fetch(`${API_URL}/api/acontecimientos/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ descripcion: nuevaDescripcion })
+            });
+            if (response.ok) {
+                cerrarModalEdicion();
+                alert('Acontecimiento actualizado.');
+                await mostrarAcontecimientos(expedienteId, 1); // Refrescar la lista
+            } else {
+                alert('Error al actualizar el acontecimiento.');
+            }
+        } catch (error) {
+            console.error("Error al editar:", error);
+            alert("No se pudo conectar con el servidor.");
+        }
+    });
     
     formularioBusqueda.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -536,36 +600,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemAcontecimiento = boton.closest('.acontecimiento-item');
             const pDescripcion = itemAcontecimiento.querySelector('.acontecimiento-content p:first-of-type strong');
             const descripcionActual = pDescripcion.nextSibling.textContent.trim();
-            const nuevaDescripcion = prompt("Edita la descripción:", descripcionActual);
 
-            if (nuevaDescripcion && nuevaDescripcion !== descripcionActual) {
-                try {
-                    const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ descripcion: nuevaDescripcion })
-                    });
-                    if (response.ok) {
-                        alert('Acontecimiento actualizado.');
-                        await mostrarAcontecimientos(expedienteId, 1); // Ahora 'expedienteId' está definido
-                    } else {
-                        alert('Error al actualizar.');
-                    }
-                } catch (error) {
-                    console.error("Error al editar:", error);
-                }
-            }
+            // Rellenamos el modal con los datos actuales
+            descripcionModal.value = descripcionActual;
+            acontecimientoIdModal.value = acontecimientoId;
+
+            // Mostramos el modal
+            modalEdicion.style.display = 'block';
         }
 
         if (boton.classList.contains('btn-eliminar-acontecimiento')) {
+            // NOTA: 'confirm()' también puede fallar en iOS en algunos contextos.
+            // Si esto te da problemas, se tendría que reemplazar por un modal de confirmación.
             if (confirm(`¿Estás seguro de eliminar este acontecimiento y todos sus archivos?`)) {
                 try {
-                    const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}`, {
-                        method: 'DELETE'
-                    });
+                    const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}`, { method: 'DELETE' });
                     if (response.ok) {
                         alert('Acontecimiento eliminado.');
-                        await mostrarAcontecimientos(expedienteId, 1); // Ahora 'expedienteId' está definido
+                        await mostrarAcontecimientos(expedienteId, 1);
                     } else {
                         alert('Error al eliminar.');
                     }
@@ -624,4 +676,5 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarOpcionesTipoTramite(choicesTipoTramite, 'Todos los Tipos');
     cargarOpcionesTipoTramite(choicesFormularioTramite, 'Seleccione un tipo...');
     buscarExpedientes('', '', '', 1);
+    resetApp();
 });
