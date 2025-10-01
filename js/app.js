@@ -458,32 +458,40 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const procesarYAnadirArchivos = async (archivos, contenedor, arrayDestino) => {
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; 
+
         const opcionesCompresion = {
-            maxSizeMB: 1,          // Tamaño máximo del archivo en MB
-            maxWidthOrHeight: 1920, // Redimensiona la imagen si es más ancha o alta de 1920px
-            useWebWorker: true,    // Usa un hilo secundario para no bloquear la interfaz
-            fileType: 'image/jpeg',// Convierte a JPG
+            maxSizeMB: 1,          // Tamaño máximo de la imagen después de comprimir
+            maxWidthOrHeight: 1920, // Redimensiona la imagen si es muy grande
+            useWebWorker: true,
+            fileType: 'image/jpeg',// Convierte todo a JPG
         };
 
         for (const archivo of archivos) {
             let archivoParaSubir = archivo;
 
-            // Si el archivo es una imagen, la procesamos
+            // --- VALIDACIÓN DE TAMAÑO PARA DOCUMENTOS ---
+            if (!archivo.type.startsWith('image/') && archivo.size > MAX_FILE_SIZE) {
+                alert(`El archivo "${archivo.name}" es demasiado grande (${(archivo.size / 1024 / 1024).toFixed(1)} MB). El tamaño máximo para documentos es 10 MB.`);
+                continue; // Salta este archivo y continúa con el siguiente
+            }
+
+            // --- COMPRESIÓN PARA IMÁGENES ---
             if (archivo.type.startsWith('image/')) {
                 try {
-                    console.log(`Comprimiendo imagen: ${archivo.name}`);
                     const archivoComprimido = await imageCompression(archivo, opcionesCompresion);
-                    // Le ponemos el nombre original al nuevo archivo comprimido
                     archivoParaSubir = new File([archivoComprimido], archivo.name, { type: 'image/jpeg' });
-                    console.log(`Compresión exitosa. Nuevo tamaño: ${Math.round(archivoParaSubir.size / 1024)} KB`);
                 } catch (error) {
-                    console.error('Error al comprimir la imagen:', error);
-                    // Si falla la compresión, usamos el archivo original
-                    archivoParaSubir = archivo;
+                    console.error('Error al comprimir la imagen, se usará el original:', error);
+                    // Si la compresión falla, verificamos si el original supera el límite
+                    if (archivoParaSubir.size > MAX_FILE_SIZE) {
+                        alert(`La imagen "${archivo.name}" es demasiado grande (${(archivo.size / 1024 / 1024).toFixed(1)} MB) y no se pudo comprimir. El tamaño máximo es 10 MB.`);
+                        continue;
+                    }
                 }
             }
 
-            // Añadimos el archivo (original o comprimido) al array y creamos la previsualización
+            // --- Lógica para añadir a la lista y previsualizar (sin cambios) ---
             arrayDestino.push(archivoParaSubir);
             
             const div = document.createElement('div');

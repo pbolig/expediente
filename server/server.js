@@ -34,7 +34,7 @@ const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) { fs.mkdirSync(uploadsDir); }
 app.use('/uploads', express.static(uploadsDir));
 
-const upload = multer();
+const upload = multer({ limits: { fileSize: 15 * 1024 * 1024 } }); 
 
 // --- API Endpoints ---
 
