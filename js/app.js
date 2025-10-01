@@ -8,19 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Referencias a elementos del DOM ---
     const btnHome = document.getElementById('btn-home');
     const registroExpedienteSection = document.getElementById('registro-expediente');
-    const inputFoto = document.getElementById('input-foto');
-    const fotosPrevisualizacion = document.getElementById('fotos-previsualizacion');
+    const panelConsulta = document.getElementById('panel-consulta');
+    const panelEdicion = document.getElementById('panel-edicion');
     const formulario = document.getElementById('formulario-expediente');
     const formularioBusqueda = document.getElementById('formulario-busqueda');
     const campoBusqueda = document.getElementById('campo-busqueda');
     const resultadosBusqueda = document.getElementById('resultados-busqueda');
+    const btnMostrarFormulario = document.getElementById('btn-mostrar-formulario');
     const selectTipoTramite = document.getElementById('tipo-tramite');
     const btnTomarFoto = document.getElementById('btn-tomar-foto');
+    const fotosPrevisualizacion = document.getElementById('fotos-previsualizacion');
     const modalFotos = document.getElementById('modal-fotos');
     const fotosModalBody = document.getElementById('fotos-modal-body');
-    const closeBtn = document.querySelector('.close-btn');
-    const panelConsulta = document.getElementById('panel-consulta');
-    const panelEdicion = document.getElementById('panel-edicion');
+    const closeBtn = document.querySelector('.modal-content .close-btn');
     const formularioEdicion = document.getElementById('formulario-edicion');
     const expedienteIdEdicion = document.getElementById('expediente-id-edicion');
     const descripcionEdicion = document.getElementById('descripcion-edicion');
@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtroTipoTramite = document.getElementById('filtro-tipo-tramite');
     const btnVoz = document.getElementById('btn-reconocimiento-voz');
     const descripcionTextarea = document.getElementById('descripcion');
+    const inputFoto = document.getElementById('input-foto');
 
     // --- REFERENCIAS PARA EL MODAL DE EDICIÓN ---
     const modalEdicion = document.getElementById('modal-edicion');
@@ -55,6 +56,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const fotosTomadas = [];
     const fotosEdicion = [];
 
+    // --- Función para Resetear la App ---
+    const resetApp = () => {
+        registroExpedienteSection.style.display = 'none';
+        panelConsulta.style.display = 'block';
+        panelEdicion.style.display = 'none';
+        campoBusqueda.value = '';
+        resultadosBusqueda.innerHTML = '';
+        document.getElementById('paginacion-busqueda').innerHTML = '';
+        choicesEstado.setChoiceByValue('');
+        choicesTipoTramite.setChoiceByValue('');
+        btnMostrarFormulario.textContent = '➕ Crear Nuevo Expediente';
+        btnMostrarFormulario.classList.remove('btn-secondary');
+        btnMostrarFormulario.classList.add('btn-primary');
+        //buscarExpedientes('', '', '', 1);
+    };
+
     // --- Funciones para Poblar Filtros y Selects ---
     const cargarFiltroEstados = () => {
         choicesEstado.clearStore();
@@ -74,27 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) { console.error('Error al cargar tipos de trámite:', error); }
     };
-
-    const resetApp = () => {
-        // 1. Mostrar las secciones principales y ocultar la de edición
-        registroExpedienteSection.style.display = 'block';
-        panelConsulta.style.display = 'block';
-        panelEdicion.style.display = 'none';
-
-        // 2. Limpiar el campo de texto y los resultados
-        campoBusqueda.value = '';
-        resultadosBusqueda.innerHTML = '';
-        document.getElementById('paginacion-busqueda').innerHTML = '';
-
-
-        // 3. Resetear los combos de Choices.js a su valor por defecto
-        choicesEstado.setChoiceByValue('');
-        choicesTipoTramite.setChoiceByValue('');
-
-        // 4. Ejecutar una búsqueda inicial sin filtros
-        buscarExpedientes('', '', '', 1);
-    };
-
 
     // Comprobamos si el navegador es compatible
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -534,6 +530,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Event Listeners ---
 
+    // --- Para mostrar/ocultar el formulario de registro ---
+    btnMostrarFormulario.addEventListener('click', () => {
+        const isHidden = registroExpedienteSection.style.display === 'none';
+        if (isHidden) {
+            registroExpedienteSection.style.display = 'block';
+            btnMostrarFormulario.textContent = '➖ Ocultar Formulario';
+            btnMostrarFormulario.classList.replace('btn-primary', 'btn-secondary');
+        } else {
+            registroExpedienteSection.style.display = 'none';
+            btnMostrarFormulario.textContent = '➕ Crear Nuevo Expediente';
+            btnMostrarFormulario.classList.replace('btn-secondary', 'btn-primary');
+        }
+    });
+
     btnHome.addEventListener('click', resetApp);
 
     const cerrarModalEdicion = () => {
@@ -695,6 +705,5 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarFiltroEstados();
     cargarOpcionesTipoTramite(choicesTipoTramite, 'Todos los Tipos');
     cargarOpcionesTipoTramite(choicesFormularioTramite, 'Seleccione un tipo...');
-    buscarExpedientes('', '', '', 1);
-    resetApp();
+    //resetApp();
 });
