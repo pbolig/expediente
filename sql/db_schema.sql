@@ -15,6 +15,18 @@ CREATE DATABASE IF NOT EXISTS `expedientes_db` DEFAULT CHARACTER SET utf8mb4 COL
 USE `expedientes_db`;
 
 -- ---------------------------------------------------------------------
+--  Tabla `contactos`
+-- ---------------------------------------------------------------------
+DROP TABLE IF EXISTS `contactos`;
+CREATE TABLE contactos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    nombre VARCHAR(255) NULL,
+    telefono VARCHAR(50) NULL,
+    direccion VARCHAR(255) NULL
+);
+
+-- ---------------------------------------------------------------------
 --  Tabla `expedientes`
 -- ---------------------------------------------------------------------
 DROP TABLE IF EXISTS `expedientes`;
@@ -70,6 +82,10 @@ CREATE TABLE `acontecimientos` (
   `descripcion` TEXT NOT NULL,
   `nuevo_estado` ENUM('en-espera', 'iniciado', 'finalizado'),
   `num_secuencial` INT NOT NULL,
+  `fecha_limite` DATE NULL DEFAULT NULL,
+  `destinatario_email` TEXT NULL DEFAULT NULL,
+  `recordatorio_enviado_el` DATETIME NULL DEFAULT NULL,
+  `frecuencia_recordatorio` VARCHAR(10) NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`expediente_id`) REFERENCES `expedientes`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

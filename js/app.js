@@ -1,14 +1,21 @@
-// js/app.js (Versión Final y Completa)
+// js/app.js
 
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000' 
     : '';
+const APP_VERSION = '1.2.2';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Referencias a elementos del DOM ---
+   
+    // --- 1. REFERENCIAS A ELEMENTOS DEL DOM ---
     const btnHome = document.getElementById('btn-home');
     const registroExpedienteSection = document.getElementById('registro-expediente');
     const panelConsulta = document.getElementById('panel-consulta');
+    const grillaAcontecimientos = document.getElementById('grilla-acontecimientos');
+    const expedienteIdEdicion = document.getElementById('expediente-id-edicion');
+    const modalEdicion = document.getElementById('modal-edicion');
+    const descripcionModal = document.getElementById('descripcion-modal');
+    const acontecimientoIdModal = document.getElementById('acontecimiento-id-modal');    
     const panelEdicion = document.getElementById('panel-edicion');
     const formulario = document.getElementById('formulario-expediente');
     const formularioBusqueda = document.getElementById('formulario-busqueda');
@@ -17,12 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnMostrarFormulario = document.getElementById('btn-mostrar-formulario');
     const selectTipoTramite = document.getElementById('tipo-tramite');
     const btnTomarFoto = document.getElementById('btn-tomar-foto');
+    const inputFoto = document.getElementById('input-foto');
     const fotosPrevisualizacion = document.getElementById('fotos-previsualizacion');
     const modalFotos = document.getElementById('modal-fotos');
     const fotosModalBody = document.getElementById('fotos-modal-body');
-    const closeBtn = document.querySelector('.modal-content .close-btn');
+    const closeBtn = document.querySelector('#modal-fotos .close-btn');
     const formularioEdicion = document.getElementById('formulario-edicion');
-    const expedienteIdEdicion = document.getElementById('expediente-id-edicion');
+    
     const descripcionEdicion = document.getElementById('descripcion-edicion');
     const inputFotoEdicion = document.getElementById('input-foto-edicion');
     const fotosPrevisualizacionEdicion = document.getElementById('fotos-previsualizacion-edicion');
@@ -30,33 +38,77 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelarEdicion = document.getElementById('btn-cancelar-edicion');
     const btnVolverBusqueda = document.getElementById('btn-volver-busqueda');
     const accordionHeader = document.querySelector('.accordion-header');
-    const grillaAcontecimientos = document.getElementById('grilla-acontecimientos');
+    
     const filtroEstado = document.getElementById('filtro-estado');
     const filtroTipoTramite = document.getElementById('filtro-tipo-tramite');
     const btnVoz = document.getElementById('btn-reconocimiento-voz');
     const descripcionTextarea = document.getElementById('descripcion');
-    const inputFoto = document.getElementById('input-foto');
-
-    // --- REFERENCIAS PARA EL MODAL DE EDICIÓN ---
-    const modalEdicion = document.getElementById('modal-edicion');
     const formModalEdicion = document.getElementById('form-modal-edicion');
-    const descripcionModal = document.getElementById('descripcion-modal');
-    const acontecimientoIdModal = document.getElementById('acontecimiento-id-modal');
     const btnCancelarModal = document.getElementById('btn-cancelar-modal');
-    const closeBtnEdicion = document.querySelector('.close-btn-edicion');
+    const closeBtnEdicion = document.querySelector('#modal-edicion .close-btn-edicion');
+    const checkFechaLimite = document.getElementById('check-fecha-limite');
+    const contenedorRecordatorio = document.getElementById('contenedor-recordatorio');
+    const destinatarioInput = document.getElementById('destinatario-input');
+    const destinatariosTags = document.getElementById('destinatarios-tags');
+    const autocompleteResults = document.getElementById('autocomplete-results');
+    const fechaLimiteInput = document.getElementById('fecha-limite-edicion');
+    const btnAbrirModalContacto = document.getElementById('btn-abrir-modal-contacto');
+    const modalContacto = document.getElementById('modal-contacto');
+    const formModalContacto = document.getElementById('form-modal-contacto');
+    const contactoEmailInput = document.getElementById('contacto-email');
+    const btnCancelarModalContacto = document.getElementById('btn-cancelar-modal-contacto');
+    const closeBtnContacto = document.querySelector('#modal-contacto .close-btn-contacto');
+    const accordionTitle = document.getElementById('accordion-title');
 
-    // --- Inicialización de Choices.js ---
-    const choicesOptions = { itemSelectText: '', searchEnabled: false, shouldSort: false, allowHTML: true };
-    const choicesEstado = new Choices(filtroEstado, choicesOptions);
-    const choicesTipoTramite = new Choices(filtroTipoTramite, choicesOptions);
-    const choicesFormularioTramite = new Choices(selectTipoTramite, { ...choicesOptions, searchEnabled: true });
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-    // --- Variables de Estado ---
+
+    // --- 2. INICIALIZACIÓN DE LIBRERÍAS Y COMPONENTES ---
+    const choicesEstado = new Choices(filtroEstado, { itemSelectText: '', searchEnabled: false, shouldSort: false });
+    const choicesTipoTramite = new Choices(filtroTipoTramite, { itemSelectText: '', searchEnabled: false, shouldSort: false });
+    const choicesFormularioTramite = new Choices(selectTipoTramite, { itemSelectText: '', searchEnabled: true, shouldSort: false });
+    const taggerDestinatarios = new AutocompleteTagger({
+        inputEl: destinatarioInput,
+        tagsEl: destinatariosTags,
+        resultsEl: autocompleteResults,
+        buttonEl: btnAbrirModalContacto,
+        apiEndpoint: `${API_URL}/api/contactos`,
+        modalContacto: modalContacto,
+        contactoEmailInput: contactoEmailInput
+    });
+
+    const reminderComponent = new ReminderComponent({
+        containerId: 'contenedor-recordatorio',
+        taggerInstance: taggerDestinatarios
+    });
+
+    // --- 3. VARIABLES DE ESTADO ---
     const fotosTomadas = [];
     const fotosEdicion = [];
 
-    // --- Función para Resetear la App ---
+    // --- 4. FUNCIONES ---
+
+    // FUNCIÓN DE AYUDA PARA RESETEAR EL FORMULARIO
+    const resetearFormularioAcontecimiento = () => {
+        // 1. Limpiamos todo el contenido del formulario
+        formularioEdicion.reset();
+        document.getElementById('editing-acontecimiento-id').value = '';
+        accordionTitle.textContent = 'Agregar Nuevo Acontecimiento';
+        reminderComponent.clear();
+        fotosPrevisualizacionEdicion.innerHTML = '';
+        fotosEdicion.length = 0;
+
+        // 2. Cerramos el acordeón (con un pequeño retraso para el navegador)
+        if (accordionHeader.classList.contains('active')) {
+            // Usamos setTimeout para asegurar que el navegador procese los cambios
+            // de limpieza antes de intentar la animación de cierre.
+            setTimeout(() => {
+                const content = accordionHeader.nextElementSibling;
+                accordionHeader.classList.remove('active');
+                content.style.maxHeight = null;
+            }, 50); // Un pequeño retraso de 50ms es suficiente
+        }
+    };
+
     const resetApp = () => {
         registroExpedienteSection.style.display = 'none';
         panelConsulta.style.display = 'block';
@@ -69,79 +121,22 @@ document.addEventListener('DOMContentLoaded', () => {
         btnMostrarFormulario.textContent = '➕ Crear Nuevo Expediente';
         btnMostrarFormulario.classList.remove('btn-secondary');
         btnMostrarFormulario.classList.add('btn-primary');
-        //buscarExpedientes('', '', '', 1);
     };
 
-    // --- Funciones para Poblar Filtros y Selects ---
-    const cargarFiltroEstados = () => {
-        choicesEstado.clearStore();
-        const estados = [{ value: '', label: 'Todos los Estados', selected: true }, { value: 'en-espera', label: 'En Espera' }, { value: 'iniciado', label: 'Iniciado' }, { value: 'finalizado', label: 'Finalizado' }];
-        choicesEstado.setChoices(estados, 'value', 'label', false);
+    const btnVolver = () => {
+        registroExpedienteSection.style.display = 'none';
+        panelConsulta.style.display = 'block';
+        panelEdicion.style.display = 'none';
+        //campoBusqueda.value = '';
+        //resultadosBusqueda.innerHTML = '';
+        //document.getElementById('paginacion-busqueda').innerHTML = '';
+        //choicesEstado.setChoiceByValue('');
+        //choicesTipoTramite.setChoiceByValue('');
+        btnMostrarFormulario.textContent = '➕ Crear Nuevo Expediente';
+        btnMostrarFormulario.classList.remove('btn-secondary');
+        btnMostrarFormulario.classList.add('btn-primary');
     };
 
-    const cargarOpcionesTipoTramite = async (choicesInstance, defaultLabel = 'Todos los Tipos') => {
-        try {
-            const response = await fetch(`${API_URL}/api/tipos-tramite`);
-            if (response.ok) {
-                const tipos = await response.json();
-                choicesInstance.clearStore();
-                const opciones = [{ value: '', label: defaultLabel, selected: true, disabled: true }];
-                tipos.forEach(tipo => opciones.push({ value: tipo.id, label: tipo.nombre }));
-                choicesInstance.setChoices(opciones, 'value', 'label', false);
-            }
-        } catch (error) { console.error('Error al cargar tipos de trámite:', error); }
-    };
-
-    // Comprobamos si el navegador es compatible
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (SpeechRecognition && !isSafari) {
-        const recognition = new SpeechRecognition();
-        let isListening = false;
-
-        // Configuración del reconocimiento (sin cambios)
-        recognition.lang = 'es-AR';
-        recognition.continuous = true;
-        recognition.interimResults = false;
-
-        // Eventos (sin cambios)
-        recognition.onresult = (event) => {
-            let textoFinal = '';
-            for (const resultado of event.results) {
-                textoFinal += resultado[0].transcript;
-            }
-            descripcionTextarea.value += (descripcionTextarea.value.length > 0 ? ' ' : '') + textoFinal;
-        };
-        recognition.onerror = (event) => {
-            console.error('Error en el reconocimiento de voz:', event.error);
-        };
-        recognition.onend = () => {
-            isListening = false;
-            btnVoz.classList.remove('escuchando');
-        };
-
-        // Manejador del clic en el botón del micrófono (sin cambios)
-        btnVoz.addEventListener('click', () => {
-            if (isListening) {
-                recognition.stop();
-            } else {
-                try {
-                    recognition.start();
-                    isListening = true;
-                    btnVoz.classList.add('escuchando');
-                } catch (error) {
-                    console.error("Error al iniciar el reconocimiento:", error);
-                }
-            }
-        });
-
-    } else {
-        // 3. Si no es compatible O SI ES SAFARI, ocultamos el botón
-        console.warn('API de Reconocimiento de Voz no compatible o es Safari. Ocultando botón.');
-        btnVoz.style.display = 'none';
-    }
-
-    // --- Funciones Utilitarias ---
     const obtenerIconoArchivo = (nombreArchivo) => {
         const extension = nombreArchivo.split('.').pop().toLowerCase();
         const iconos = { 'pdf': '📄', 'doc': '📝', 'docx': '📝', 'xls': '📊', 'xlsx': '📊', 'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'zip': '🗜️', 'default': '📎' };
@@ -152,6 +147,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const extensionesImagen = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
         return extensionesImagen.includes(nombreArchivo.split('.').pop().toLowerCase());
     };
+    
+    function mostrarMensaje(texto) {
+        const toast = document.createElement('div');
+        toast.textContent = texto;
+        toast.style.cssText = `
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #7e9d0dff;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: top 0.3s ease;
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.style.top = '20px', 10);
+        
+        setTimeout(() => {
+            toast.style.top = '-100px';
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
     const descargarArchivo = async (nombreArchivo) => {
         try {
             const response = await fetch(`${API_URL}/uploads/${nombreArchivo}`);
@@ -168,29 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
             a.remove();
         } catch (error) {
             console.error('Error al descargar:', error);
-            alert('No se pudo descargar el archivo.');
+            mostrarMensaje('No se pudo descargar el archivo.');
         }
     };
-
-    // Función para actualizar la apariencia de los selects personalizados
-    const actualizarCustomSelect = (selectElement) => {
-        const wrapper = selectElement.parentElement;
-        const selectedOption = selectElement.options[selectElement.selectedIndex];
-        wrapper.setAttribute('data-selected', selectedOption.textContent);
-    };
-
-    // Aplicamos la lógica a ambos filtros
-    [filtroEstado, filtroTipoTramite].forEach(select => {
-        // Lo actualizamos al cargar la página
-        select.addEventListener('focus', () => { // Se asegura de que se actualice si las opciones cargan tarde
-            actualizarCustomSelect(select);
-        });
-
-        // Y cada vez que el usuario cambia la opción
-        select.addEventListener('change', () => {
-            actualizarCustomSelect(select);
-        });
-    });
 
     const actualizarAlturaAcordeon = () => {
         if (panelEdicion.style.display === 'block' && accordionHeader.classList.contains('active')) {
@@ -199,23 +202,59 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const manejarPrevisualizacionArchivos = (archivos, contenedor, arrayDestino) => {
+    const procesarYAnadirArchivos = async (archivos, contenedor, arrayDestino) => {
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; 
+
+        const opcionesCompresion = {
+            maxSizeMB: 1,          // Tamaño máximo de la imagen después de comprimir
+            maxWidthOrHeight: 1920, // Redimensiona la imagen si es muy grande
+            useWebWorker: true,
+            fileType: 'image/jpeg',// Convierte todo a JPG
+        };
+
         for (const archivo of archivos) {
-            arrayDestino.push(archivo);
+            let archivoParaSubir = archivo;
+
+            // --- VALIDACIÓN DE TAMAÑO PARA DOCUMENTOS ---
+            if (!archivo.type.startsWith('image/') && archivo.size > MAX_FILE_SIZE) {
+                //alert(`El archivo "${archivo.name}" es demasiado grande (${(archivo.size / 1024 / 1024).toFixed(1)} MB). El tamaño máximo para documentos es 10 MB.`);
+                mostrarMensaje(`El archivo "${archivo.name}" es demasiado grande (${(archivo.size / 1024 / 1024).toFixed(1)} MB). El tamaño máximo para documentos es 10 MB.`);
+                continue; // Salta este archivo y continúa con el siguiente
+            }
+
+            // --- COMPRESIÓN PARA IMÁGENES ---
+            if (archivo.type.startsWith('image/')) {
+                try {
+                    const archivoComprimido = await imageCompression(archivo, opcionesCompresion);
+                    archivoParaSubir = new File([archivoComprimido], archivo.name, { type: 'image/jpeg' });
+                } catch (error) {
+                    console.error('Error al comprimir la imagen, se usará el original:', error);
+                    // Si la compresión falla, verificamos si el original supera el límite
+                    if (archivoParaSubir.size > MAX_FILE_SIZE) {
+                        //alert(`La imagen "${archivo.name}" es demasiado grande (${(archivo.size / 1024 / 1024).toFixed(1)} MB) y no se pudo comprimir. El tamaño máximo es 10 MB.`);
+                        mostrarMensaje(`La imagen "${archivo.name}" es demasiado grande (${(archivo.size / 1024 / 1024).toFixed(1)} MB) y no se pudo comprimir. El tamaño máximo es 10 MB.`);
+                        continue;
+                    }
+                }
+            }
+
+            // --- Lógica para añadir a la lista y previsualizar (sin cambios) ---
+            arrayDestino.push(archivoParaSubir);
+            
             const div = document.createElement('div');
             div.classList.add('previsualizacion-item');
-            if (esImagen(archivo.name)) {
+            if (esImagen(archivoParaSubir.name)) {
                 const img = document.createElement('img');
-                img.src = URL.createObjectURL(archivo);
+                img.src = URL.createObjectURL(archivoParaSubir);
                 div.appendChild(img);
             } else {
-                div.innerHTML = `<span class="file-icon">${obtenerIconoArchivo(archivo.name)}</span>`;
+                div.innerHTML = `<span class="file-icon">${obtenerIconoArchivo(archivoParaSubir.name)}</span>`;
             }
             const btnEliminar = document.createElement('button');
             btnEliminar.classList.add('btn-eliminar-preview');
             btnEliminar.innerHTML = '×';
             btnEliminar.onclick = () => {
-                const index = arrayDestino.indexOf(archivo);
+                const index = arrayDestino.indexOf(archivoParaSubir);
                 if (index > -1) {
                     arrayDestino.splice(index, 1);
                     div.remove();
@@ -227,19 +266,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (contenedor.id === 'fotos-previsualizacion-edicion') actualizarAlturaAcordeon();
         }
     };
-    
-    // --- Funciones de Lógica y UI ---
-    const cargarTiposTramite = async () => {
+
+    const cargarFiltroEstados = () => {
+        choicesEstado.clearStore();
+        const estados = [{ value: '', label: 'Todos los Estados', selected: true }, { value: 'en-espera', label: 'En Espera' }, { value: 'iniciado', label: 'Iniciado' }, { value: 'finalizado', label: 'Finalizado' }];
+        choicesEstado.setChoices(estados, 'value', 'label', false);
+    };
+
+    const cargarOpcionesTipoTramite = async (choicesInstance, defaultLabel = 'Todos los Tipos') => {
         try {
             const response = await fetch(`${API_URL}/api/tipos-tramite`);
             if (response.ok) {
                 const tipos = await response.json();
-                tipos.forEach(tipo => {
-                    const option = document.createElement('option');
-                    option.value = tipo.id;
-                    option.textContent = tipo.nombre;
-                    selectTipoTramite.appendChild(option);
-                });
+                choicesInstance.clearStore();
+                const opciones = [{ value: '', label: defaultLabel, selected: true, disabled: true }];
+                tipos.forEach(tipo => opciones.push({ value: tipo.id, label: tipo.nombre }));
+                choicesInstance.setChoices(opciones, 'value', 'label', false);
             }
         } catch (error) { console.error('Error al cargar tipos de trámite:', error); }
     };
@@ -296,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
             paginacionContainer.appendChild(controlesDiv);
         }
     };
-    
+
     const cargarExpedienteParaEdicion = async (expedienteId) => {
         try {
             const response = await fetch(`${API_URL}/api/tramites/${expedienteId}`);
@@ -313,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) { console.error('Error al cargar expediente:', error); }
     };
-    
+
     const mostrarAcontecimientos = async (expedienteId, page = 1) => {
         try {
             const response = await fetch(`${API_URL}/api/acontecimientos/${expedienteId}?page=${page}`);
@@ -327,10 +369,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
+            grillaAcontecimientos.dataset.acontecimientos = JSON.stringify(data.acontecimientos);
+
             data.acontecimientos.forEach(acontecimiento => {
                 const div = document.createElement('div');
                 div.classList.add('acontecimiento-item');
                 const fecha = new Date(acontecimiento.fecha_hora).toLocaleString('es-ES');
+                
+                let recordatorioHtml = '';
+                let botonRecordatorioHtml = ''; // Variable para el nuevo botón
+
+                if (acontecimiento.fecha_limite) {
+                    const fechaLimite = new Date(acontecimiento.fecha_limite).toLocaleDateString('es-ES');
+                    if (acontecimiento.recordatorio_enviado_el) {
+                        const fechaEnvio = new Date(acontecimiento.recordatorio_enviado_el).toLocaleDateString('es-ES');
+                        recordatorioHtml = `<p class="recordatorio-status enviado">✔ Recordatorio enviado el ${fechaEnvio} (Límite: ${fechaLimite})</p>`;
+                        // Si ya se envió, mostramos el botón de resetear
+                        botonRecordatorioHtml = `<button class="btn btn-secondary btn-resetear-recordatorio" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">🔄 Resetear Recordatorio</button>`;
+                    } else {
+                        recordatorioHtml = `<p class="recordatorio-status pendiente">🔔 Recordatorio programado para el ${fechaLimite}</p>`;
+                        // Si está pendiente, podríamos añadir un botón de envío manual en el futuro
+                    }
+                }
+
                 div.innerHTML = `
                     <div class="acontecimiento-header">
                         <h4>Acontecimiento #${acontecimiento.num_secuencial}</h4>
@@ -339,18 +400,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="acontecimiento-content">
                         <p><strong>Descripción:</strong> ${acontecimiento.descripcion || 'N/A'}</p>
                         <p><strong>Estado:</strong> ${acontecimiento.nuevo_estado || 'N/A'}</p>
+                        ${recordatorioHtml}
                     </div>
                     <div class="acontecimiento-actions">
-                        <button class="btn btn-outline btn-ver-archivos" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">
-                            📁 Ver Archivos
-                        </button>
-                        <button class="btn btn-secondary btn-editar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">
-                            ✏️ Editar
-                        </button>
-                        <button class="btn btn-danger btn-eliminar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">
-                            🗑️ Eliminar
-                        </button>
-                    </div>`;
+                        <button class="btn btn-outline btn-ver-archivos" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">📁 Ver Archivos</button>
+                        <button class="btn btn-secondary btn-editar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}">✏️ Editar</button>
+                        <button class="btn btn-danger btn-eliminar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">🗑️ Eliminar</button>
+                        ${botonRecordatorioHtml} </div>`;
+                
                 grillaAcontecimientos.appendChild(div);
             });
         } catch (error) {
@@ -362,12 +419,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const mostrarArchivosEnModal = (archivos, tituloModal) => {
         fotosModalBody.innerHTML = '';
         document.querySelector('#modal-fotos h2').textContent = tituloModal;
+    
         if (!archivos || archivos.length === 0) {
             fotosModalBody.innerHTML = '<p>No hay archivos para este acontecimiento.</p>';
         } else {
             archivos.forEach(archivo => {
                 const div = document.createElement('div');
-                div.classList.add('contenedor-imagen'); // Reutilizamos esta clase para la grilla
+                div.classList.add('contenedor-imagen');
                 if (esImagen(archivo.nombre_archivo)) {
                     div.innerHTML = `<img src="${API_URL}/uploads/${archivo.nombre_archivo}" alt="${archivo.nombre_archivo}">`;
                 } else {
@@ -387,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fotosModalBody.appendChild(div);
             });
         }
+        // La línea clave para mostrar el modal
         modalFotos.style.display = 'block';
     };
 
@@ -398,11 +457,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const descripcion = document.getElementById('descripcion').value;
 
         if (!tipoTramite) {
-            alert('Por favor, seleccione un tipo de trámite.');
+            //alert('Por favor, seleccione un tipo de trámite.');
+            mostrarMensaje('Por favor, seleccione un tipo de trámite.');
             return;
         }
         if (fotosTomadas.length === 0) {
-            alert('Por favor, adjunte al menos un documento.');
+            //alert('Por favor, adjunte al menos un documento.');
+            mostrarMensaje('Por favor, adjunte al menos un documento.');
             return;
         }
 
@@ -417,147 +478,199 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${API_URL}/api/tramites`, { method: 'POST', body: formData });
             if (response.ok) {
                 const resultado = await response.json();
-                alert(`Expediente ${resultado.numero_expediente} guardado con éxito!`);
+                //alert(`Expediente ${resultado.numero_expediente} guardado con éxito!`);
+                mostrarMensaje(`Expediente ${resultado.numero_expediente} guardado con éxito!`);
                 formulario.reset();
                 fotosPrevisualizacion.innerHTML = '';
                 fotosTomadas.length = 0;
                 choicesFormularioTramite.clearStore(); // Limpiamos el combo
                 cargarOpcionesTipoTramite(choicesFormularioTramite, 'Seleccione un tipo...'); // Lo recargamos
             } else {
-                alert('Hubo un error al guardar el expediente.');
+                //alert('Hubo un error al guardar el expediente.');
+                mostrarMensaje('Hubo un error al guardar el expediente.');
             }
         } catch (error) {
             console.error('Error de red:', error);
-            alert('No se pudo conectar con el servidor.');
+            //alert('No se pudo conectar con el servidor.');
+            mostrarMensaje('No se pudo conectar con el servidor.');
         }
     };
-    
+
     const enviarAcontecimiento = async (event) => {
         event.preventDefault();
+        
+        const editingId = document.getElementById('editing-acontecimiento-id').value;
+        const esEdicion = !!editingId;
         const expedienteId = expedienteIdEdicion.value;
-        if (!expedienteId) { alert("Error: No se ha seleccionado un expediente."); return; }
-        const numeroExpediente = document.querySelector('#panel-edicion .panel-header h2').textContent.split(': ')[1];
-        if (!numeroExpediente) { alert("Error: No se pudo leer el número de expediente."); return; }
 
-        const formData = new FormData();
+        // --- BLOQUE DE VALIDACIÓN ---
+        if (checkFechaLimite.checked) {
+            if (!fechaLimiteInput.value) {
+                mostrarMensaje('Por favor, seleccione una fecha límite para el recordatorio.');
+                return; // Detiene el guardado
+            }
+            if (taggerDestinatarios.getValue().length === 0) {
+                mostrarMensaje('Por favor, añada al menos un destinatario para el recordatorio.');
+                return; // Detiene el guardado
+            }
+        }
+
+
+        const numeroExpediente = document.querySelector('#panel-edicion .panel-header h2').textContent.split(': ')[1];
+
+        let body;
+        let headers = {};
+        const method = esEdicion ? 'PUT' : 'POST';
+        const url = esEdicion ? `${API_URL}/api/acontecimientos/${editingId}` : `${API_URL}/api/acontecimientos/${expedienteId}`;
+
+        // Obtenemos los datos de los campos
+        const descripcionAcontecimiento = descripcionEdicion.value;
         const nuevoEstado = document.querySelector('input[name="estado-toggle"]:checked').value;
-        formData.append('descripcionAcontecimiento', descripcionEdicion.value);
-        formData.append('nuevoEstado', nuevoEstado);
-        formData.append('numeroExpediente', numeroExpediente);
-        fotosEdicion.forEach((foto, index) => formData.append(`foto-${index}`, foto));
+        const reminderData = reminderComponent.getValue();
+
+        if (esEdicion) {
+            // --- MODO EDICIÓN: Enviamos como JSON ---
+            headers['Content-Type'] = 'application/json';
+            const data = {
+                descripcionAcontecimiento,
+                nuevoEstado,
+                fechaLimite: reminderData.fechaLimite || null,
+                frecuenciaRecordatorio: reminderData.frecuencia || 'unico',
+                destinatariosEmail: JSON.stringify(reminderData.destinatarios)
+            };
+            body = JSON.stringify(data);
+            // NOTA: La edición de archivos adjuntos no está implementada en este flujo.
+
+        } else {
+            // --- MODO CREACIÓN: Enviamos como FormData ---
+            const formData = new FormData();
+            formData.append('descripcionAcontecimiento', descripcionAcontecimiento);
+            formData.append('nuevoEstado', nuevoEstado);
+            formData.append('numeroExpediente', numeroExpediente);
+
+            if (reminderData.fechaLimite) {
+                formData.append('fechaLimite', reminderData.fechaLimite);
+                formData.append('frecuenciaRecordatorio', reminderData.frecuencia);
+                if (reminderData.destinatarios.length > 0) {
+                    formData.append('destinatariosEmail', JSON.stringify(reminderData.destinatarios));
+                }
+            }
+            
+            fotosEdicion.forEach((foto, index) => formData.append(`foto-${index}`, foto));
+            body = formData;
+        }
 
         try {
-            const response = await fetch(`${API_URL}/api/acontecimientos/${expedienteId}`, { method: 'POST', body: formData });
+            const response = await fetch(url, { method, headers, body });
             if (response.ok) {
-                alert('Acontecimiento guardado con éxito.');
-                formularioEdicion.reset();
+                mostrarMensaje(`Acontecimiento ${esEdicion ? 'actualizado' : 'guardado'} con éxito.`);
+                resetearFormularioAcontecimiento();
+                document.getElementById('editing-acontecimiento-id').value = '';
+                reminderComponent.clear();
                 fotosPrevisualizacionEdicion.innerHTML = '';
                 fotosEdicion.length = 0;
                 if (accordionHeader.classList.contains('active')) accordionHeader.click();
+                resetearFormularioAcontecimiento(); 
                 await mostrarAcontecimientos(expedienteId, 1);
             } else {
                 const errorData = await response.json();
-                alert(`Hubo un error al guardar: ${errorData.error || response.statusText}`);
+                mostrarMensaje(`Hubo un error: ${errorData.error || response.statusText}`);
             }
         } catch (error) {
             console.error('Error de red:', error);
-            alert('No se pudo conectar con el servidor.');
-        }
-    };
-
-    const procesarYAnadirArchivos = async (archivos, contenedor, arrayDestino) => {
-        const MAX_FILE_SIZE = 10 * 1024 * 1024; 
-
-        const opcionesCompresion = {
-            maxSizeMB: 1,          // Tamaño máximo de la imagen después de comprimir
-            maxWidthOrHeight: 1920, // Redimensiona la imagen si es muy grande
-            useWebWorker: true,
-            fileType: 'image/jpeg',// Convierte todo a JPG
-        };
-
-        for (const archivo of archivos) {
-            let archivoParaSubir = archivo;
-
-            // --- VALIDACIÓN DE TAMAÑO PARA DOCUMENTOS ---
-            if (!archivo.type.startsWith('image/') && archivo.size > MAX_FILE_SIZE) {
-                alert(`El archivo "${archivo.name}" es demasiado grande (${(archivo.size / 1024 / 1024).toFixed(1)} MB). El tamaño máximo para documentos es 10 MB.`);
-                continue; // Salta este archivo y continúa con el siguiente
-            }
-
-            // --- COMPRESIÓN PARA IMÁGENES ---
-            if (archivo.type.startsWith('image/')) {
-                try {
-                    const archivoComprimido = await imageCompression(archivo, opcionesCompresion);
-                    archivoParaSubir = new File([archivoComprimido], archivo.name, { type: 'image/jpeg' });
-                } catch (error) {
-                    console.error('Error al comprimir la imagen, se usará el original:', error);
-                    // Si la compresión falla, verificamos si el original supera el límite
-                    if (archivoParaSubir.size > MAX_FILE_SIZE) {
-                        alert(`La imagen "${archivo.name}" es demasiado grande (${(archivo.size / 1024 / 1024).toFixed(1)} MB) y no se pudo comprimir. El tamaño máximo es 10 MB.`);
-                        continue;
-                    }
-                }
-            }
-
-            // --- Lógica para añadir a la lista y previsualizar (sin cambios) ---
-            arrayDestino.push(archivoParaSubir);
-            
-            const div = document.createElement('div');
-            div.classList.add('previsualizacion-item');
-            if (esImagen(archivoParaSubir.name)) {
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(archivoParaSubir);
-                div.appendChild(img);
-            } else {
-                div.innerHTML = `<span class="file-icon">${obtenerIconoArchivo(archivoParaSubir.name)}</span>`;
-            }
-            const btnEliminar = document.createElement('button');
-            btnEliminar.classList.add('btn-eliminar-preview');
-            btnEliminar.innerHTML = '×';
-            btnEliminar.onclick = () => {
-                const index = arrayDestino.indexOf(archivoParaSubir);
-                if (index > -1) {
-                    arrayDestino.splice(index, 1);
-                    div.remove();
-                    if (contenedor.id === 'fotos-previsualizacion-edicion') actualizarAlturaAcordeon();
-                }
-            };
-            div.appendChild(btnEliminar);
-            contenedor.appendChild(div);
-            if (contenedor.id === 'fotos-previsualizacion-edicion') actualizarAlturaAcordeon();
+            mostrarMensaje('No se pudo conectar con el servidor.');
         }
     };
     
-    // --- Event Listeners ---
-
-    // --- Para mostrar/ocultar el formulario de registro ---
+    // --- 5. EVENT LISTENERS ---
+    document.getElementById('app-version').textContent = APP_VERSION;
+    
+    btnHome.addEventListener('click', resetApp);
+    
     btnMostrarFormulario.addEventListener('click', () => {
         const isHidden = registroExpedienteSection.style.display === 'none';
-        if (isHidden) {
-            registroExpedienteSection.style.display = 'block';
-            btnMostrarFormulario.textContent = '➖ Ocultar Formulario';
-            btnMostrarFormulario.classList.replace('btn-primary', 'btn-secondary');
-        } else {
-            registroExpedienteSection.style.display = 'none';
-            btnMostrarFormulario.textContent = '➕ Crear Nuevo Expediente';
-            btnMostrarFormulario.classList.replace('btn-secondary', 'btn-primary');
+        registroExpedienteSection.style.display = isHidden ? 'block' : 'none';
+        btnMostrarFormulario.textContent = isHidden ? '➖ Ocultar Formulario' : '➕ Crear Nuevo Expediente';
+        btnMostrarFormulario.classList.toggle('btn-primary', !isHidden);
+        btnMostrarFormulario.classList.toggle('btn-secondary', isHidden);
+    });
+    
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition && !isSafari) {
+        const recognition = new SpeechRecognition();
+        let isListening = false;
+        recognition.lang = 'es-AR';
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.onresult = (event) => {
+            let textoFinal = '';
+            for (const resultado of event.results) { textoFinal += resultado[0].transcript; }
+            descripcionTextarea.value += (descripcionTextarea.value.length > 0 ? ' ' : '') + textoFinal;
+        };
+        recognition.onerror = (event) => console.error('Error en reconocimiento de voz:', event.error);
+        recognition.onend = () => { isListening = false; btnVoz.classList.remove('escuchando'); };
+        btnVoz.addEventListener('click', () => {
+            if (isListening) { recognition.stop(); } else {
+                try { recognition.start(); isListening = true; btnVoz.classList.add('escuchando'); } 
+                catch (error) { console.error("Error al iniciar reconocimiento:", error); }
+            }
+        });
+    } else {
+        btnVoz.style.display = 'none';
+    }
+
+    checkFechaLimite.addEventListener('change', () => {
+        const isChecked = checkFechaLimite.checked;
+        contenedorRecordatorio.style.display = isChecked ? 'block' : 'none';
+        if (!isChecked) {
+            taggerDestinatarios.clear();
+            fechaLimiteInput.value = '';
         }
+        actualizarAlturaAcordeon();
     });
 
-    btnHome.addEventListener('click', resetApp);
+    const cerrarModalContacto = () => modalContacto.style.display = 'none';
+    closeBtnContacto.addEventListener('click', cerrarModalContacto);
+    btnCancelarModalContacto.addEventListener('click', cerrarModalContacto);
+    formModalContacto.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nuevoContacto = {
+            email: document.getElementById('contacto-email').value,
+            nombre: document.getElementById('contacto-nombre').value,
+            telefono: document.getElementById('contacto-telefono').value,
+            direccion: document.getElementById('contacto-direccion').value,
+        };
+        try {
+            const response = await fetch(`${API_URL}/api/contactos`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nuevoContacto) });
+            if (response.ok) {
+                mostrarMensaje('Contacto guardado.');
+                taggerDestinatarios.add(nuevoContacto.email);
+                btnAbrirModalContacto.style.display = 'none';
+                cerrarModalContacto();
+                formModalContacto.reset();
+            } else { mostrarMensaje('Error al guardar el contacto.'); }
+        } catch (error) { console.error('Error al guardar contacto:', error); }
+    });
 
-    const cerrarModalEdicion = () => {
-        modalEdicion.style.display = 'none';
-    };
-    closeBtnEdicion.addEventListener('click', cerrarModalEdicion);
-    btnCancelarModal.addEventListener('click', cerrarModalEdicion);
+    // Listeners de Formularios y UI principal
+    formularioBusqueda.addEventListener('submit', (event) => {
+        event.preventDefault();
+        buscarExpedientes(campoBusqueda.value, choicesEstado.getValue(true), choicesTipoTramite.getValue(true), 1);
+    });
+    formulario.addEventListener('submit', enviarFormulario);
+    formularioEdicion.addEventListener('submit', enviarAcontecimiento);
 
-    // Guardar los cambios al enviar el formulario del modal
     formModalEdicion.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const id = acontecimientoIdModal.value;
+        const id = acontecimientoIdModal.value; // Ahora 'id' tendrá el valor correcto
         const nuevaDescripcion = descripcionModal.value;
         const expedienteId = expedienteIdEdicion.value;
+
+        if (!id) {
+            alert("Error: No se pudo identificar el acontecimiento a editar.");
+            return;
+        }
 
         try {
             const response = await fetch(`${API_URL}/api/acontecimientos/${id}`, {
@@ -566,9 +679,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ descripcion: nuevaDescripcion })
             });
             if (response.ok) {
-                cerrarModalEdicion();
+                modalEdicion.style.display = 'none';
                 alert('Acontecimiento actualizado.');
-                await mostrarAcontecimientos(expedienteId, 1); // Refrescar la lista
+                await mostrarAcontecimientos(expedienteId, 1);
             } else {
                 alert('Error al actualizar el acontecimiento.');
             }
@@ -578,16 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    formularioBusqueda.addEventListener('submit', (event) => {
-        event.preventDefault();
-        buscarExpedientes(
-            campoBusqueda.value,
-            choicesEstado.getValue(true),
-            choicesTipoTramite.getValue(true),
-            1
-        );
-    });
-
+    // Listeners de la UI principal
     resultadosBusqueda.addEventListener('click', async (event) => {
         const boton = event.target.closest('.btn-ver-acontecimientos');
         if (boton) {
@@ -607,6 +711,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const acontecimientoId = boton.dataset.acontecimientoId;
         const expedienteId = boton.dataset.expedienteId;
 
+        // Lógica para RESETEAR RECORDATORIO
+        if (boton.classList.contains('btn-resetear-recordatorio')) {
+            if (confirm("¿Estás seguro de que deseas resetear este recordatorio para que se vuelva a enviar?")) {
+                try {
+                    const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}/reset_recordatorio`, { method: 'POST' });
+                    if (response.ok) {
+                        mostrarMensaje('Recordatorio reseteado.');
+                        await mostrarAcontecimientos(expedienteId, 1);
+                    } else {
+                        mostrarMensaje('Error al resetear el recordatorio.');
+                    }
+                } catch (error) {
+                    console.error("Error al resetear:", error);
+                    mostrarMensaje("No se pudo conectar con el servidor.");
+                }
+            }
+            return; // Detenemos la ejecución aquí para no continuar con los otros 'if'
+        }
+
+        // Lógica para VER ARCHIVOS
         if (boton.classList.contains('btn-ver-archivos')) {
             try {
                 boton.disabled = true;
@@ -614,94 +738,136 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}/fotos`);
                 if (response.ok) {
                     const archivos = await response.json();
-                    mostrarArchivosEnModal(archivos, `Archivos del Acontecimiento`);
+                    mostrarArchivosEnModal(archivos, `Archivos del Acontecimiento #${acontecimientoId}`);
                 } else {
-                    alert('No se pudieron obtener los archivos.');
+                    mostrarMensaje('No se pudieron obtener los archivos.');
                 }
             } catch (error) {
                 console.error('Error de red:', error);
+                mostrarMensaje('No se pudo conectar con el servidor.');
             } finally {
                 boton.disabled = false;
                 boton.innerHTML = '📁 Ver Archivos';
             }
         }
 
+        // Lógica para EDITAR ACONTECIMIENTO
         if (boton.classList.contains('btn-editar-acontecimiento')) {
-            const itemAcontecimiento = boton.closest('.acontecimiento-item');
-            const pDescripcion = itemAcontecimiento.querySelector('.acontecimiento-content p:first-of-type strong');
-            const descripcionActual = pDescripcion.nextSibling.textContent.trim();
+            const todosLosAcontecimientos = JSON.parse(grillaAcontecimientos.dataset.acontecimientos || '[]');
+            const acontecimientoParaEditar = todosLosAcontecimientos.find(a => a.id == acontecimientoId);
 
-            // Rellenamos el modal con los datos actuales
-            descripcionModal.value = descripcionActual;
-            acontecimientoIdModal.value = acontecimientoId;
+            if (!acontecimientoParaEditar) {
+                mostrarMensaje("Error: no se encontraron los datos de este acontecimiento.");
+                return;
+            }
 
-            // Mostramos el modal
-            modalEdicion.style.display = 'block';
+            // 1. PRIMERO, rellenamos todos los campos del formulario.
+            document.getElementById('editing-acontecimiento-id').value = acontecimientoParaEditar.id;
+            descripcionEdicion.value = acontecimientoParaEditar.descripcion;
+            document.querySelector(`input[name="estado-toggle"][value="${acontecimientoParaEditar.nuevo_estado}"]`).checked = true;
+            
+            // El componente se encarga de mostrar/ocultar los campos de recordatorio y rellenarlos.
+            // Esto puede cambiar la altura del contenido.
+            reminderComponent.setData(acontecimientoParaEditar);
+
+            // Cambiamos el título
+            accordionTitle.textContent = '✏️ Editar Acontecimiento';
+
+            // 2. DESPUÉS, si el acordeón está cerrado, lo abrimos.
+            // Ahora sí calculará la altura correcta porque el contenido ya cambió.
+            if (!accordionHeader.classList.contains('active')) {
+                accordionHeader.click();
+            } else {
+                // Si ya estaba abierto, solo recalculamos la altura para asegurarnos.
+                actualizarAlturaAcordeon();
+            }
+            
+            // 3. Finalmente, hacemos scroll para que el formulario sea visible.
+            formularioEdicion.scrollIntoView({ behavior: 'smooth' });
         }
 
+        // Lógica para ELIMINAR ACONTECIMIENTO
         if (boton.classList.contains('btn-eliminar-acontecimiento')) {
-            // NOTA: 'confirm()' también puede fallar en iOS en algunos contextos.
-            // Si esto te da problemas, se tendría que reemplazar por un modal de confirmación.
             if (confirm(`¿Estás seguro de eliminar este acontecimiento y todos sus archivos?`)) {
                 try {
                     const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}`, { method: 'DELETE' });
                     if (response.ok) {
-                        alert('Acontecimiento eliminado.');
+                        mostrarMensaje('Acontecimiento eliminado.');
                         await mostrarAcontecimientos(expedienteId, 1);
                     } else {
-                        alert('Error al eliminar.');
+                        mostrarMensaje('Error al eliminar el acontecimiento.');
                     }
                 } catch (error) {
                     console.error("Error al eliminar:", error);
+                    mostrarMensaje("No se pudo conectar con el servidor.");
                 }
             }
         }
-
     });
-    
-    formulario.addEventListener('submit', enviarFormulario);
-    formularioEdicion.addEventListener('submit', enviarAcontecimiento);
-    
+
+    formModalEdicion.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = acontecimientoIdModal.value;
+        const nuevaDescripcion = descripcionModal.value;
+        const expedienteId = expedienteIdEdicion.value;
+
+        if (!id) {
+            mostrarMensaje("Error: No se pudo identificar el acontecimiento a editar.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/api/acontecimientos/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ descripcion: nuevaDescripcion })
+            });
+            if (response.ok) {
+                cerrarModalEdicion();
+                mostrarMensaje('Acontecimiento actualizado.');
+                await mostrarAcontecimientos(expedienteId, 1); // Refrescar la lista
+            } else {
+                mostrarMensaje('Error al actualizar el acontecimiento.');
+            }
+        } catch (error) {
+            console.error("Error al editar:", error);
+            mostrarMensaje("No se pudo conectar con el servidor.");
+        }
+    });
+
     btnVolverBusqueda.addEventListener('click', () => {
         panelEdicion.style.display = 'none';
         panelConsulta.style.display = 'block';
         registroExpedienteSection.style.display = 'block';
+        btnVolver();
     });
 
-    btnCancelarEdicion.addEventListener('click', () => {
-        panelEdicion.style.display = 'none';
-        panelConsulta.style.display = 'block';
-        registroExpedienteSection.style.display = 'block';
+    btnCancelarEdicion.addEventListener('click', () => {        
+        resetearFormularioAcontecimiento()
     });
 
-    if (accordionHeader) {
-        accordionHeader.addEventListener('click', () => {
-            accordionHeader.classList.toggle('active');
-            const content = accordionHeader.nextElementSibling;
-            content.style.maxHeight = content.style.maxHeight ? null : content.scrollHeight + "px";
-        });
-    }
+    const cerrarModalEdicion = () => {
+        modalEdicion.style.display = 'none';
+    };
+    closeBtnEdicion.addEventListener('click', cerrarModalEdicion);
+    btnCancelarModal.addEventListener('click', cerrarModalEdicion);
 
-    btnTomarFoto.addEventListener('click', () => inputFoto.click());
-    inputFoto.addEventListener('change', (e) => {
-        procesarYAnadirArchivos(e.target.files, fotosPrevisualizacion, fotosTomadas);
-        e.target.value = '';
+    if (accordionHeader) accordionHeader.addEventListener('click', () => {
+        accordionHeader.classList.toggle('active');
+        const content = accordionHeader.nextElementSibling;
+        content.style.maxHeight = content.style.maxHeight ? null : content.scrollHeight + "px";
     });
     
+    // Listeners de subida de archivos
+    btnTomarFoto.addEventListener('click', () => inputFoto.click());
+    inputFoto.addEventListener('change', (e) => { procesarYAnadirArchivos(e.target.files, fotosPrevisualizacion, fotosTomadas); e.target.value = ''; });
     btnAdjuntarEdicion.addEventListener('click', () => inputFotoEdicion.click());
-    inputFotoEdicion.addEventListener('change', (e) => {
-        procesarYAnadirArchivos(e.target.files, fotosPrevisualizacionEdicion, fotosEdicion);
-        e.target.value = ''; // Limpiamos el input
-    });
+    inputFotoEdicion.addEventListener('change', (e) => { procesarYAnadirArchivos(e.target.files, fotosPrevisualizacionEdicion, fotosEdicion); e.target.value = ''; });
 
     closeBtn.addEventListener('click', () => modalFotos.style.display = 'none');
-    window.addEventListener('click', (event) => {
-        if (event.target === modalFotos) {
-            modalFotos.style.display = 'none';
-        }
-    });
+    window.addEventListener('click', (event) => { if (event.target === modalFotos) modalFotos.style.display = 'none'; });
 
-    // --- Inicialización ---
+    // --- 6. INICIALIZACIÓN ---
     cargarFiltroEstados();
     cargarOpcionesTipoTramite(choicesTipoTramite, 'Todos los Tipos');
     cargarOpcionesTipoTramite(choicesFormularioTramite, 'Seleccione un tipo...');

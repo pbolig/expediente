@@ -19,49 +19,19 @@
         <section id="registro-expediente" style="display: none;">
             <h2>Registrar Nuevo Expediente</h2>
             <form id="formulario-expediente">
-                <div class="campo-form">
-                    <label for="tipo-tramite">Tipo de Trámite:</label>
-                    <select id="tipo-tramite"></select>
-                </div>
-                <div class="campo-form">
-                    <div class="campo-con-icono">
-                        <label for="descripcion">Descripción:</label>
-                        <button type="button" id="btn-reconocimiento-voz" class="btn-microfono" title="Convertir voz a texto">🎤</button>
-                    </div>
-                    <textarea id="descripcion" rows="5" placeholder="Descripción detallada... o presiona el 🎤 para dictar" required></textarea>
-                </div>
-                <div class="campo-form">
-                    <label>Documentación:</label>
-                    <div id="fotos-container">
-                        <button type="button" id="btn-tomar-foto" class="btn btn-outline">Adjuntar Archivo</button>
-                        <input type="file" id="input-foto" multiple style="display: none;">
-                    </div>
-                    <div id="fotos-previsualizacion"></div>
-                </div>
-                <div class="form-actions">
-                     <button type="submit" id="btn-guardar" class="btn btn-primary">Guardar Expediente</button>
-                </div>
+                <div class="campo-form"><label for="tipo-tramite">Tipo de Trámite:</label><select id="tipo-tramite"></select></div>
+                <div class="campo-form"><div class="campo-con-icono"><label for="descripcion">Descripción:</label><button type="button" id="btn-reconocimiento-voz" class="btn-microfono" title="Convertir voz a texto">🎤</button></div><textarea id="descripcion" rows="5" placeholder="Descripción detallada..." required></textarea></div>
+                <div class="campo-form"><label>Documentación:</label><div id="fotos-container"><button type="button" id="btn-tomar-foto" class="btn btn-outline">Adjuntar Archivo</button><input type="file" id="input-foto" multiple style="display: none;"></div><div id="fotos-previsualizacion"></div></div>
+                <div class="form-actions"><button type="submit" id="btn-guardar" class="btn btn-primary">Guardar Expediente</button></div>
             </form>
         </section>
 
         <section id="panel-consulta">
-            <div class="panel-header">
-                <h2>Panel de Consulta</h2>
-                <button id="btn-mostrar-formulario" class="btn btn-primary">➕ Crear Nuevo Expediente</button>
-            </div>
+            <div class="panel-header"><h2>Panel de Consulta</h2><button id="btn-mostrar-formulario" class="btn btn-primary">➕ Crear Nuevo Expediente</button></div>
             <form id="formulario-busqueda" class="form-busqueda-mejorado">
-                <div class="campo-form">
-                    <label for="campo-busqueda">Buscar por texto:</label>
-                    <input type="text" id="campo-busqueda" placeholder="Nro. Expediente, descripción...">
-                </div>
-                <div class="campo-form">
-                    <label for="filtro-estado">Filtrar por Estado:</label>
-                    <select id="filtro-estado"></select>
-                </div>
-                <div class="campo-form">
-                    <label for="filtro-tipo-tramite">Filtrar por Tipo:</label>
-                    <select id="filtro-tipo-tramite"></select>
-                </div>
+                <div class="campo-form"><label for="campo-busqueda">Buscar por texto:</label><input type="text" id="campo-busqueda" placeholder="Nro. Expediente..."></div>
+                <div class="campo-form"><label for="filtro-estado">Filtrar por Estado:</label><select id="filtro-estado"></select></div>
+                <div class="campo-form"><label for="filtro-tipo-tramite">Filtrar por Tipo:</label><select id="filtro-tipo-tramite"></select></div>
                 <button type="submit" class="btn btn-primary">Buscar</button>
             </form>
             <div id="resultados-busqueda"></div>
@@ -69,24 +39,54 @@
         </section>
 
         <section id="panel-edicion" style="display: none;">
-            <div class="panel-header">
-                <h2>Detalles del Expediente</h2>
-                <button id="btn-volver-busqueda" class="btn btn-secondary">← Volver</button>
-            </div>
+            <div class="panel-header"><h2>Detalles del Expediente</h2><button id="btn-volver-busqueda" class="btn btn-secondary">← Volver</button></div>
             <div id="info-expediente-general"></div>
             <h3>Historial de Acontecimientos</h3>
             <div id="grilla-acontecimientos"></div>
             <hr>
             <div class="accordion">
                 <h3 class="accordion-header">
-                    Agregar Nuevo Acontecimiento
+                    <span id="accordion-title">Agregar Nuevo Acontecimiento</span>
                     <span class="accordion-icon">+</span>
                 </h3>
                 <div class="accordion-content">
                     <form id="formulario-edicion">
                         <input type="hidden" id="expediente-id-edicion">
-                        <div class="campo-form"><label for="descripcion-edicion">Agregar descripción:</label><textarea id="descripcion-edicion" name="descripcionAcontecimiento" rows="3" placeholder="Descripción de lo realizado" required></textarea></div>
+                        <input type="hidden" id="editing-acontecimiento-id">
+                        <div class="campo-form"><label for="descripcion-edicion">Agregar descripción:</label><textarea id="descripcion-edicion" name="descripcionAcontecimiento" rows="3" required></textarea></div>
                         <div class="campo-form"><label>Documentación Adicional:</label><div id="fotos-container-edicion"><button type="button" id="btn-adjuntar-edicion" class="btn btn-outline">Adjuntar Archivo</button><input type="file" id="input-foto-edicion" multiple style="display: none;"></div><div id="fotos-previsualizacion-edicion"></div></div>
+                        
+                        <div id="contenedor-recordatorio">
+                            <div class="campo-form-horizontal">
+                                <input type="checkbox" id="check-fecha-limite">
+                                <label for="check-fecha-limite">Añadir Recordatorio</label>
+                            </div>
+                            <div id="reminder-fields" style="display: none;">
+                                <div class="campo-form">
+                                    <label for="frecuencia-recordatorio">Frecuencia:</label>
+                                    <select id="frecuencia-recordatorio" name="frecuenciaRecordatorio">
+                                        <option value="unico" selected>Una sola vez</option>
+                                        <option value="diario">Diariamente</option>
+                                        <option value="semanal">Semanalmente</option>
+                                        <option value="mensual">Mensualmente</option>
+                                        <option value="mensual">Anualmente</option>
+                                    </select>
+                                </div>
+                                <div class="campo-form">
+                                    <label for="destinatario-input">Destinatario(s):</label>
+                                    <div id="destinatarios-tags" class="tags-container"></div>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="destinatario-input" placeholder="Buscar o añadir email...">
+                                        <button type="button" id="btn-abrir-modal-contacto" class="btn-add-tag" style="display: none;">➕</button>
+                                    </div>
+                                    <div id="autocomplete-results" class="autocomplete-results" style="display: none;"></div>
+                                </div>
+                                <div class="campo-form">
+                                    <label for="fecha-limite-edicion">Fecha Límite:</label>
+                                    <input type="date" id="fecha-limite-edicion" name="fechaLimite">
+                                </div>
+                            </div>
+                        </div>
                         <div class="campo-form"><label>Cambiar Estado:</label><div class="toggle-group"><div class="toggle-option"><input type="radio" id="toggle-espera" name="estado-toggle" value="en-espera" checked><label for="toggle-espera">En Espera</label></div><div class="toggle-option"><input type="radio" id="toggle-iniciado" name="estado-toggle" value="iniciado"><label for="toggle-iniciado">Iniciado</label></div><div class="toggle-option"><input type="radio" id="toggle-finalizado" name="estado-toggle" value="finalizado"><label for="toggle-finalizado">Finalizado</label></div></div></div>
                         <div class="form-actions"><button type="submit" class="btn btn-primary">Guardar Cambios</button><button type="button" id="btn-cancelar-edicion" class="btn btn-secondary">Cancelar</button></div>
                     </form>
@@ -94,29 +94,16 @@
             </div>
         </section>
     </main>
-
-    <footer>
-        <p>© 2025 Expedientes ISET57 | <span>V 20251001</span></p>
-    </footer>
-
-    <div id="modal-fotos" class="modal">
-        <div class="modal-content"><span class="close-btn">&times;</span><h2>Fotos / Archivos</h2><div id="fotos-modal-body"></div></div>
-    </div>
-    <div id="modal-edicion" class="modal">
-        <div class="modal-content"><span class="close-btn-edicion close-btn">&times;</span><h2>Editar Descripción</h2><form id="form-modal-edicion"><input type="hidden" id="acontecimiento-id-modal"><textarea id="descripcion-modal" rows="6" required></textarea><div class="form-actions"><button type="button" id="btn-cancelar-modal" class="btn btn-secondary">Cancelar</button><button type="submit" class="btn btn-primary">Guardar Cambios</button></div></form></div>
-    </div>
+    <footer><p>© 2025 Expedientes ISET57 | Versión: <span id="app-version"></span></p></footer>
+    <div id="modal-fotos" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h2>Fotos / Archivos</h2><div id="fotos-modal-body"></div></div></div>
+    <div id="modal-edicion" class="modal"><div class="modal-content"><span class="close-btn-edicion close-btn">&times;</span><h2>Editar Descripción</h2><form id="form-modal-edicion"><input type="hidden" id="acontecimiento-id-modal"><textarea id="descripcion-modal" rows="6" required></textarea><div class="form-actions"><button type="button" id="btn-cancelar-modal" class="btn btn-secondary">Cancelar</button><button type="submit" class="btn btn-primary">Guardar Cambios</button></div></form></div></div>
+    <div id="modal-contacto" class="modal"><div class="modal-content"><span class="close-btn-contacto close-btn">&times;</span><h2>Añadir Nuevo Contacto</h2><form id="form-modal-contacto"><div class="campo-form"><label for="contacto-email">Email:</label><input type="email" id="contacto-email" required readonly></div><div class="campo-form"><label for="contacto-nombre">Nombre y Apellido (Opcional):</label><input type="text" id="contacto-nombre"></div><div class="campo-form"><label for="contacto-telefono">Teléfono (Opcional):</label><input type="text" id="contacto-telefono"></div><div class="campo-form"><label for="contacto-direccion">Dirección (Opcional):</label><input type="text" id="contacto-direccion"></div><div class="form-actions"><button type="button" id="btn-cancelar-modal-contacto" class="btn btn-secondary">Cancelar</button><button type="submit" class="btn btn-primary">Guardar Contacto</button></div></form></div></div>
 
     <script src="js/choices.min.js"></script>
     <script src="js/image-compression.js"></script>
+    <script src="js/components/AutocompleteTagger.js"></script>
+    <script src="js/components/ReminderComponent.js"></script>
     <script src="js/app.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/js/service-worker.js')
-                    .then(reg => console.log('Service Worker registrado', reg))
-                    .catch(err => console.error('Error al registrar Service Worker:', err));
-            });
-        }
-    </script>
+    <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/js/service-worker.js').then(reg=>console.log('SW ok',reg)).catch(err=>console.error('SW err',err));});}</script>
 </body>
 </html>

@@ -4,6 +4,135 @@ const mysql = require('mysql2/promise');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cron = require('node-cron');
+const { enviarCorreoRecordatorio } = require('./emailService');
+
+// --- FUNCIÓN AUXILIAR PARA CALCULAR DÍAS HÁBILES ---
+function addBusinessDays(startDate, days) {
+    let date = new Date(startDate);
+    let added = 0;
+    const direction = days > 0 ? 1 : -1; // Determina si sumamos o restamos días
+    const daysAbs = Math.abs(days);      // Usamos el número absoluto de días
+
+    while (added < daysAbs) {
+        // Mueve la fecha un día en la dirección correcta
+        date.setDate(date.getDate() + direction);
+        
+        const dayOfWeek = date.getDay();
+        // Si no es fin de semana (0=Domingo, 6=Sábado), cuenta como un día hábil
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            added++;
+        }
+    }
+    return date; // Devuelve la fecha final calculada
+}
+
+// --- TAREA PROGRAMADA (CRON JOB) ---
+cron.schedule('0 8 * * *', async () => {
+   //cron.schedule('* * * * *', async () => {  //Envía cada minuto el mail
+   console.log('--- Ejecutando tarea diaria de recordatorios ---');
+    const conn = await pool.getConnection();
+    try {
+        const hoy = new Date();
+        
+        // 1. Buscamos TODOS los acontecimientos con fecha límite en el futuro y que tengan destinatario
+        const [acontecimientos] = await conn.execute(
+            "SELECT * FROM acontecimientos WHERE fecha_limite >= CURDATE() AND destinatario_email IS NOT NULL AND destinatario_email != '[]'"
+        );
+
+        if (acontecimientos.length === 0) {
+            console.log('No hay acontecimientos con recordatorios activos.');
+            return;
+        }
+
+        console.log(`Revisando ${acontecimientos.length} acontecimientos con recordatorios activos.`);
+
+        // 2. Para cada uno, aplicamos la lógica de frecuencia
+        for (const acontecimiento of acontecimientos) {
+
+            console.log(`\n[DEBUG] Procesando Acontecimiento ID: ${acontecimiento.id}`);
+            console.log(`[DEBUG]   -> Frecuencia: ${acontecimiento.frecuencia_recordatorio}`);
+            console.log(`[DEBUG]   -> Fecha Límite (DB): ${acontecimiento.fecha_limite}`);
+            console.log(`[DEBUG]   -> Recordatorio Enviado (DB): ${acontecimiento.recordatorio_enviado_el}`);
+
+
+            const fechaLimite = new Date(acontecimiento.fecha_limite);
+            const fechaEnvioOriginal = addBusinessDays(fechaLimite, -3);
+
+            console.log(`[DEBUG]   -> Hoy es: ${hoy.toDateString()}`);
+            console.log(`[DEBUG]   -> Fecha de envío calculada: ${fechaEnvioOriginal.toDateString()}`);
+            
+            let enviarHoy = false;
+
+            switch (acontecimiento.frecuencia_recordatorio) {
+                case 'unico':
+                    // Si hoy es el día de envío y nunca se ha enviado
+                    if (hoy.toDateString() === fechaEnvioOriginal.toDateString() && !acontecimiento.recordatorio_enviado_el) {
+                        enviarHoy = true;
+
+                        console.log("[DEBUG]   -> DECISIÓN: Enviar hoy (Único)");
+                    }
+                    break;
+                case 'diario':
+                    // Si hoy es el día de envío o una fecha posterior (hasta la fecha límite)
+                    if (hoy >= fechaEnvioOriginal && hoy <= fechaLimite) {
+                        enviarHoy = true;
+                    }
+                    break;
+                case 'semanal':
+                    // Si hoy es posterior al día de envío original y coincide el día de la semana
+                    if (hoy >= fechaEnvioOriginal && hoy.getDay() === fechaEnvioOriginal.getDay()) {
+                        enviarHoy = true;
+                    }
+                    break;
+                case 'mensual':
+                    // Si hoy es posterior y coincide el día del mes
+                    if (hoy >= fechaEnvioOriginal && hoy.getDate() === fechaEnvioOriginal.getDate()) {
+                        enviarHoy = true;
+                    }
+                    break;
+                case 'anual':
+                    // Si hoy es posterior a la fecha de envío original,
+                    // y coincide el mes y el día, se debe enviar.
+                    if (hoy >= fechaEnvioOriginal && 
+                        hoy.getMonth() === fechaEnvioOriginal.getMonth() && 
+                        hoy.getDate() === fechaEnvioOriginal.getDate()) {
+                        enviarHoy = true;
+                    }
+                    break;
+                }
+
+            if (!enviarHoy) {
+                 console.log("[DEBUG]   -> DECISIÓN: No enviar hoy.");
+            }
+
+            if (enviarHoy) {            
+                console.log(`[INFO] Preparando envío para acontecimiento ID: ${acontecimiento.id}`);
+                const [expedientes] = await conn.execute('SELECT * FROM expedientes WHERE id = ?', [acontecimiento.expediente_id]);
+                const [fotos] = await conn.execute('SELECT * FROM fotos WHERE acontecimiento_id = ?', [acontecimiento.id]);
+                
+                if (expedientes.length > 0) {
+                    await enviarCorreoRecordatorio(acontecimiento, expedientes[0], fotos);
+                    
+                    // 3. ¡IMPORTANTE! Actualizamos la fecha del último envío
+                    await conn.execute(
+                        'UPDATE acontecimientos SET recordatorio_enviado_el = NOW() WHERE id = ?',
+                        [acontecimiento.id]
+                    );
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error('Error durante la tarea programada de recordatorios:', error);
+    } finally {
+        if (conn) conn.release();
+        console.log('--- Tarea diaria de recordatorios finalizada ---');
+    }
+}, {
+    scheduled: true,
+    timezone: "America/Argentina/Buenos_Aires"
+});
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -35,6 +164,23 @@ if (!fs.existsSync(uploadsDir)) { fs.mkdirSync(uploadsDir); }
 app.use('/uploads', express.static(uploadsDir));
 
 const upload = multer({ limits: { fileSize: 15 * 1024 * 1024 } }); 
+const uploadMiddleware = multer({ 
+    limits: { fileSize: 15 * 1024 * 1024 } 
+}).any();
+// Creamos nuestro propio manejador que usa el middleware de multer
+const handleUpload = (req, res, next) => {
+    uploadMiddleware(req, res, function (err) {
+        // Si multer devuelve un error (ej: archivo demasiado grande), lo capturamos aquí
+        if (err) {
+            console.error("--- ERROR DE MULTER DETECTADO ---");
+            console.error(err);
+            return res.status(400).json({ error: `Error al subir el archivo: ${err.message}` });
+        }
+        // Si no hay error, continuamos a la lógica principal del endpoint
+        next();
+    });
+};
+
 
 // --- API Endpoints ---
 
@@ -184,10 +330,10 @@ app.get('/api/acontecimientos/:id', async (req, res) => {
         const [countRows] = await conn.execute('SELECT COUNT(*) as total FROM acontecimientos WHERE expediente_id = ?', [id]);
         const totalPages = Math.ceil(countRows[0].total / limit);
 
-        // --- LÓGICA SIMPLIFICADA ---
-        // Ahora solo seleccionamos el 'num_secuencial' directamente de la base de datos
+        // --- CONSULTA CORREGIDA ---
+        // Nos aseguramos de seleccionar todos los campos necesarios.
         const query = `
-            SELECT id, expediente_id, fecha_hora, descripcion, nuevo_estado, num_secuencial 
+            SELECT id, expediente_id, fecha_hora, descripcion, nuevo_estado, num_secuencial, fecha_limite, recordatorio_enviado_el, frecuencia_recordatorio, destinatario_email
             FROM acontecimientos 
             WHERE expediente_id = ? 
             ORDER BY fecha_hora DESC 
@@ -196,7 +342,7 @@ app.get('/api/acontecimientos/:id', async (req, res) => {
         const [rows] = await conn.execute(query, [id, String(limit), String(offset)]);
 
         res.status(200).json({
-            acontecimientos: rows, // Ya no necesitamos mapear ni calcular nada
+            acontecimientos: rows,
             total_pages: totalPages,
             current_page: page
         });
@@ -210,48 +356,46 @@ app.get('/api/acontecimientos/:id', async (req, res) => {
 
 
 // Nuevo endpoint para guardar un nuevo acontecimiento
-app.post('/api/acontecimientos/:id', upload.any(), async (req, res) => {
+app.post('/api/acontecimientos/:id', handleUpload, async (req, res) => {
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
-        const { id } = req.params; // ID del expediente
-        const { descripcionAcontecimiento, nuevoEstado, numeroExpediente } = req.body;
+        const { id } = req.params;
+        const { 
+            descripcionAcontecimiento, 
+            nuevoEstado, 
+            numeroExpediente,
+            fechaLimite,
+            destinatariosEmail
+        } = req.body;
         const fotos = req.files;
 
-        // --- LÓGICA NUEVA PARA OBTENER EL NÚMERO SECUENCIAL ---
-        // 1. Contamos cuántos acontecimientos ya existen para este expediente.
         const [countRows] = await conn.execute('SELECT COUNT(*) as total FROM acontecimientos WHERE expediente_id = ?', [id]);
         const nuevoNumeroSecuencial = countRows[0].total + 1;
+        const fechaHora = new Date();
 
-        const fechaHora = new Date()
-
-        // 2. Insertamos el nuevo acontecimiento CON su número secuencial.
         const [acontecimientoResult] = await conn.execute(
-            'INSERT INTO acontecimientos (expediente_id, fecha_hora, descripcion, nuevo_estado, num_secuencial) VALUES (?, ?, ?, ?, ?)',
-            [id, new Date(), descripcionAcontecimiento, nuevoEstado, nuevoNumeroSecuencial]
+            'INSERT INTO acontecimientos (expediente_id, fecha_hora, descripcion, nuevo_estado, num_secuencial, fecha_limite, destinatario_email) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [id, fechaHora, descripcionAcontecimiento, nuevoEstado, nuevoNumeroSecuencial, fechaLimite || null, destinatariosEmail || null]
         );
-
+        // Obtenemos el ID del acontecimiento recién insertado para usarlo después.
         const acontecimientoId = acontecimientoResult.insertId;
 
         await conn.execute('UPDATE expedientes SET estado = ? WHERE id = ?', [nuevoEstado, id]);
 
         if (fotos && fotos.length > 0) {
-            // --- LÓGICA DE DIRECTORIOS POR FECHA ---
             const year = fechaHora.getFullYear().toString();
             const month = (fechaHora.getMonth() + 1).toString().padStart(2, '0');
             const day = fechaHora.getDate().toString().padStart(2, '0');
-    
             const datePath = path.join(year, month, day);
             const fullDateDirPath = path.join(uploadsDir, datePath);
-    
-            // Crea el directorio si no existe
             fs.mkdirSync(fullDateDirPath, { recursive: true });
 
             for (let i = 0; i < fotos.length; i++) {
                 const foto = fotos[i];
+                // Ahora 'acontecimientoId' está disponible aquí
                 const uniqueSuffix = `${acontecimientoId}-${i + 1}${path.extname(foto.originalname)}`;
                 const baseFilename = `${numeroExpediente}-${uniqueSuffix}`;
-
                 const nombreArchivoConRuta = path.join(datePath, baseFilename);
                 const rutaAbsolutaArchivo = path.join(uploadsDir, nombreArchivoConRuta);
 
@@ -263,10 +407,15 @@ app.post('/api/acontecimientos/:id', upload.any(), async (req, res) => {
                 );
             }
         }
+        
         await conn.commit();
         res.status(201).json({ mensaje: 'Acontecimiento guardado con éxito.' });
+
     } catch (error) {
         await conn.rollback();
+        // Ahora cualquier error se registrará en la consola
+        console.error("--- ERROR AL GUARDAR ACONTECIMIENTO ---");
+        console.error(error);
         res.status(500).json({ error: 'Error interno del servidor.' });
     } finally {
         if (conn) conn.release();
@@ -324,24 +473,40 @@ app.get('/api/tramites/:id', async (req, res) => {
 });
 
 // --- Endpoint para EDITAR un acontecimiento ---
-app.put('/api/acontecimientos/:id', async (req, res) => {
+app.put('/api/acontecimientos/:id', handleUpload, async (req, res) => {
     const conn = await pool.getConnection();
     try {
         const { id } = req.params;
-        const { descripcion } = req.body;
+        const { 
+            descripcionAcontecimiento, 
+            nuevoEstado, 
+            fechaLimite, 
+            frecuenciaRecordatorio, 
+            destinatariosEmail 
+        } = req.body;
 
-        if (!descripcion) {
-            return res.status(400).json({ error: 'La descripción no puede estar vacía.' });
-        }
+        await conn.beginTransaction();
 
+        // Actualizamos el acontecimiento
         await conn.execute(
-            'UPDATE acontecimientos SET descripcion = ? WHERE id = ?',
-            [descripcion, id]
+            'UPDATE acontecimientos SET descripcion = ?, nuevo_estado = ?, fecha_limite = ?, frecuencia_recordatorio = ?, destinatario_email = ? WHERE id = ?',
+            [
+                descripcionAcontecimiento, 
+                nuevoEstado, 
+                fechaLimite || null, 
+                frecuenciaRecordatorio || 'unico', 
+                destinatariosEmail || null, 
+                id
+            ]
         );
 
+        // Aquí podrías añadir lógica para manejar nuevos archivos adjuntos en una edición si quisieras
+
+        await conn.commit();
         res.status(200).json({ mensaje: 'Acontecimiento actualizado con éxito.' });
 
     } catch (error) {
+        await conn.rollback();
         console.error('Error al actualizar el acontecimiento:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });
     } finally {
@@ -381,6 +546,107 @@ app.delete('/api/acontecimientos/:id', async (req, res) => {
     } catch (error) {
         await conn.rollback();
         console.error('Error al eliminar el acontecimiento:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+// --- Endpoint para CREAR un nuevo contacto ---
+app.post('/api/contactos', async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+        const { email, nombre, telefono, direccion } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'El email es obligatorio.' });
+        }
+
+        // Insertamos el nuevo contacto en la tabla 'contactos'
+        await conn.execute(
+            'INSERT INTO contactos (email, nombre, telefono, direccion) VALUES (?, ?, ?, ?)',
+            [email, nombre || null, telefono || null, direccion || null]
+        );
+
+        res.status(201).json({ mensaje: 'Contacto creado con éxito.' });
+
+    } catch (error) {
+        // Manejo de error si el email ya existe (código 1062 para duplicados en MySQL)
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'El email ya existe.' });
+        }
+        console.error('Error al crear el contacto:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+// --- Endpoint para BUSCAR contactos (autocompletado) ---
+app.get('/api/contactos', async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+        const { search } = req.query;
+        if (!search || search.length < 3) {
+            return res.json([]);
+        }
+
+        const searchTerm = `${search}%`;
+        const [rows] = await conn.execute(
+            'SELECT email FROM contactos WHERE email LIKE ? OR nombre LIKE ? LIMIT 5',
+            [searchTerm, searchTerm]
+        );
+        
+        res.status(200).json(rows);
+
+    } catch (error) {
+        console.error('Error al buscar contactos:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+
+// --- Endpoint para CREAR un nuevo contacto ---
+app.post('/api/contactos', async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+        const { email, nombre, telefono, direccion } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'El email es obligatorio.' });
+        }
+
+        await conn.execute(
+            'INSERT INTO contactos (email, nombre, telefono, direccion) VALUES (?, ?, ?, ?)',
+            [email, nombre || null, telefono || null, direccion || null]
+        );
+
+        res.status(201).json({ mensaje: 'Contacto creado con éxito.' });
+
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'El email ya existe.' });
+        }
+        console.error('Error al crear el contacto:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+app.post('/api/acontecimientos/:id/reset_recordatorio', async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+        const { id } = req.params;
+        await conn.execute(
+            'UPDATE acontecimientos SET recordatorio_enviado_el = NULL WHERE id = ?',
+            [id]
+        );
+        res.status(200).json({ mensaje: 'Recordatorio reseteado. Se volverá a enviar.' });
+    } catch (error) {
+        console.error("Error al resetear recordatorio:", error);
         res.status(500).json({ error: 'Error interno del servidor.' });
     } finally {
         if (conn) conn.release();

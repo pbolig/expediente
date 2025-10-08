@@ -3,6 +3,8 @@
 /server/node_modules
 
 # Archivos de usuarios
+test.html
+/scripts/
 # Ignora la carpeta de archivos subidos
 /uploads
 /DATOS
