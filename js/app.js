@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const tipos = await response.json();
                 choicesInstance.clearStore();
-                const opciones = [{ value: '', label: defaultLabel, selected: true, disabled: true }];
+                const opciones = [{ value: '', label: defaultLabel, selected: true }];                                 
                 tipos.forEach(tipo => opciones.push({ value: tipo.id, label: tipo.nombre }));
                 choicesInstance.setChoices(opciones, 'value', 'label', false);
             }
