@@ -41,26 +41,20 @@ cron.schedule('0 8 * * *', async () => {
         );
 
         if (acontecimientos.length === 0) {
-            console.log('No hay acontecimientos con recordatorios activos.');
+            //console.log('No hay acontecimientos con recordatorios activos.');
             return;
         }
 
-        console.log(`Revisando ${acontecimientos.length} acontecimientos con recordatorios activos.`);
+        //console.log(`Revisando ${acontecimientos.length} acontecimientos con recordatorios activos.`);
 
         // 2. Para cada uno, aplicamos la lógica de frecuencia
         for (const acontecimiento of acontecimientos) {
 
-            console.log(`\n[DEBUG] Procesando Acontecimiento ID: ${acontecimiento.id}`);
-            console.log(`[DEBUG]   -> Frecuencia: ${acontecimiento.frecuencia_recordatorio}`);
-            console.log(`[DEBUG]   -> Fecha Límite (DB): ${acontecimiento.fecha_limite}`);
-            console.log(`[DEBUG]   -> Recordatorio Enviado (DB): ${acontecimiento.recordatorio_enviado_el}`);
-
-
             const fechaLimite = new Date(acontecimiento.fecha_limite);
             const fechaEnvioOriginal = addBusinessDays(fechaLimite, -3);
 
-            console.log(`[DEBUG]   -> Hoy es: ${hoy.toDateString()}`);
-            console.log(`[DEBUG]   -> Fecha de envío calculada: ${fechaEnvioOriginal.toDateString()}`);
+            //console.log(`[DEBUG]   -> Hoy es: ${hoy.toDateString()}`);
+            //console.log(`[DEBUG]   -> Fecha de envío calculada: ${fechaEnvioOriginal.toDateString()}`);
             
             let enviarHoy = false;
 
@@ -69,8 +63,6 @@ cron.schedule('0 8 * * *', async () => {
                     // Si hoy es el día de envío y nunca se ha enviado
                     if (hoy.toDateString() === fechaEnvioOriginal.toDateString() && !acontecimiento.recordatorio_enviado_el) {
                         enviarHoy = true;
-
-                        console.log("[DEBUG]   -> DECISIÓN: Enviar hoy (Único)");
                     }
                     break;
                 case 'diario':
@@ -103,11 +95,11 @@ cron.schedule('0 8 * * *', async () => {
                 }
 
             if (!enviarHoy) {
-                 console.log("[DEBUG]   -> DECISIÓN: No enviar hoy.");
+                 //console.log("[DEBUG]   -> DECISIÓN: No enviar hoy.");
             }
 
             if (enviarHoy) {            
-                console.log(`[INFO] Preparando envío para acontecimiento ID: ${acontecimiento.id}`);
+                //console.log(`[INFO] Preparando envío para acontecimiento ID: ${acontecimiento.id}`);
                 const [expedientes] = await conn.execute('SELECT * FROM expedientes WHERE id = ?', [acontecimiento.expediente_id]);
                 const [fotos] = await conn.execute('SELECT * FROM fotos WHERE acontecimiento_id = ?', [acontecimiento.id]);
                 
@@ -172,8 +164,7 @@ const handleUpload = (req, res, next) => {
     uploadMiddleware(req, res, function (err) {
         // Si multer devuelve un error (ej: archivo demasiado grande), lo capturamos aquí
         if (err) {
-            console.error("--- ERROR DE MULTER DETECTADO ---");
-            console.error(err);
+            console.error("--- ERROR DE MULTER DETECTADO ---", err);
             return res.status(400).json({ error: `Error al subir el archivo: ${err.message}` });
         }
         // Si no hay error, continuamos a la lógica principal del endpoint
@@ -191,8 +182,8 @@ app.post('/api/tramites', upload.any(), async (req, res) => {
         const { tipoTramite, descripcion } = req.body;
         const fotos = req.files;
 
-        if (!tipoTramite || !descripcion || !fotos || !fotos.length) {
-            return res.status(400).json({ error: 'Faltan datos o fotos.' });
+        if (!tipoTramite || !descripcion) {
+            return res.status(400).json({ error: 'Faltan datos de tipo de trámite o descripción.' });
         }
 
         const fechaHora = new Date();

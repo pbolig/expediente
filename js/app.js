@@ -175,6 +175,65 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2500);
     }
 
+
+    async function mostrarConfirmacion(texto) {
+        return new Promise((resolve) => {
+            // Crear el fondo oscuro
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+
+            // Crear la caja del diálogo
+            const dialog = document.createElement('div');
+            dialog.className = 'confirm-dialog';
+
+            // Crear el mensaje
+            const message = document.createElement('p');
+            message.textContent = texto;
+
+            // Crear el contenedor de botones
+            const actions = document.createElement('div');
+            actions.className = 'confirm-actions';
+
+            // Crear el botón de "Detener"
+            const btnStop = document.createElement('button');
+            btnStop.textContent = 'Detener';
+            btnStop.className = 'btn btn-secondary';
+            
+            // Crear el botón de "Continuar"
+            const btnContinue = document.createElement('button');
+            btnContinue.textContent = 'Continuar';
+            btnContinue.className = 'btn btn-primary';
+
+            // Función para cerrar y eliminar el diálogo
+            const closeDialog = (result) => {
+                overlay.style.opacity = '0';
+                dialog.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    document.body.removeChild(overlay);
+                    resolve(result); // Devuelve 'true' o 'false'
+                }, 200);
+            };
+
+            // Asignar eventos a los botones
+            btnContinue.onclick = () => closeDialog(true);
+            btnStop.onclick = () => closeDialog(false);
+
+            // Armar la estructura
+            actions.appendChild(btnStop);
+            actions.appendChild(btnContinue);
+            dialog.appendChild(message);
+            dialog.appendChild(actions);
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+
+            // Animación de entrada
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                dialog.style.transform = 'scale(1)';
+            }, 10);
+        });
+    }
+
     const descargarArchivo = async (nombreArchivo) => {
         try {
             const response = await fetch(`${API_URL}/uploads/${nombreArchivo}`);
@@ -452,6 +511,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const enviarFormulario = async (event) => {
         event.preventDefault();
 
+        if (fotosTomadas.length === 0) {
+            const confirmacion = await mostrarConfirmacion('No has adjuntado ningún archivo. ¿Deseas continuar de todas formas?');
+            if (!confirmacion) { // Si el usuario presiona "Detener", la confirmación es 'false'
+                return; // Detenemos el proceso de guardado
+            }
+        }
+
+        //if (fotosTomadas.length === 0) {
+            //alert('Por favor, adjunte al menos un documento.');
+        //    mostrarMensaje('Por favor, adjunte al menos un documento.');
+        //    return;
+        //}
+
         // -- Leemos el valor usando el método de Choices.js --
         const tipoTramite = choicesFormularioTramite.getValue(true);
         const descripcion = document.getElementById('descripcion').value;
@@ -461,11 +533,9 @@ document.addEventListener('DOMContentLoaded', () => {
             mostrarMensaje('Por favor, seleccione un tipo de trámite.');
             return;
         }
-        if (fotosTomadas.length === 0) {
-            //alert('Por favor, adjunte al menos un documento.');
-            mostrarMensaje('Por favor, adjunte al menos un documento.');
-            return;
-        }
+        
+
+        
 
         const formData = new FormData();
         formData.append('tipoTramite', tipoTramite);
@@ -473,6 +543,11 @@ document.addEventListener('DOMContentLoaded', () => {
         fotosTomadas.forEach((foto, index) => {
             formData.append(`foto-${index}`, foto);
         });
+
+        console.log("--- Datos que se van a enviar al servidor ---");
+console.log("Tipo de Trámite:", tipoTramite);
+console.log("Descripción:", descripcion);
+console.log("Cantidad de fotos:", fotosTomadas.length);
         
         try {
             const response = await fetch(`${API_URL}/api/tramites`, { method: 'POST', body: formData });
