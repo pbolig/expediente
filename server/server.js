@@ -29,73 +29,63 @@ function addBusinessDays(startDate, days) {
 
 // --- TAREA PROGRAMADA (CRON JOB) ---
 cron.schedule('0 8 * * *', async () => {
-   //cron.schedule('* * * * *', async () => {  //Envía cada minuto el mail
-   console.log('--- Ejecutando tarea diaria de recordatorios ---');
+    //cron.schedule('* * * * *', async () => {  //Envía cada minuto el mail
+    console.log('--- Ejecutando tarea diaria de recordatorios ---');
     const conn = await pool.getConnection();
     try {
         const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0); // Normalizamos a medianoche
         
         // 1. Buscamos TODOS los acontecimientos con fecha límite en el futuro y que tengan destinatario
         const [acontecimientos] = await conn.execute(
             "SELECT * FROM acontecimientos WHERE fecha_limite >= CURDATE() AND destinatario_email IS NOT NULL AND destinatario_email != '[]'"
         );
 
-        if (acontecimientos.length === 0) {
-            //console.log('No hay acontecimientos con recordatorios activos.');
-            return;
+        if (acontecimientos.length === 0) { 
+            console.log('No hay recordatorios activos.'); return; 
         }
 
-        //console.log(`Revisando ${acontecimientos.length} acontecimientos con recordatorios activos.`);
+        console.log(`Revisando ${acontecimientos.length} recordatorios activos.`);
 
         // 2. Para cada uno, aplicamos la lógica de frecuencia
         for (const acontecimiento of acontecimientos) {
 
             const fechaLimite = new Date(acontecimiento.fecha_limite);
             const fechaEnvioOriginal = addBusinessDays(fechaLimite, -3);
-
-            //console.log(`[DEBUG]   -> Hoy es: ${hoy.toDateString()}`);
-            //console.log(`[DEBUG]   -> Fecha de envío calculada: ${fechaEnvioOriginal.toDateString()}`);
-            
+            const ultimoEnvio = acontecimiento.recordatorio_enviado_el ? new Date(acontecimiento.recordatorio_enviado_el) : null;
             let enviarHoy = false;
 
             switch (acontecimiento.frecuencia_recordatorio) {
                 case 'unico':
-                    // Si hoy es el día de envío y nunca se ha enviado
-                    if (hoy.toDateString() === fechaEnvioOriginal.toDateString() && !acontecimiento.recordatorio_enviado_el) {
+                    if (hoy.toDateString() === fechaEnvioOriginal.toDateString() && !ultimoEnvio) {
                         enviarHoy = true;
                     }
                     break;
                 case 'diario':
-                    // Si hoy es el día de envío o una fecha posterior (hasta la fecha límite)
-                    if (hoy >= fechaEnvioOriginal && hoy <= fechaLimite) {
+                    if (hoy >= fechaEnvioOriginal && hoy <= fechaLimite && (!ultimoEnvio || hoy.toDateString() !== ultimoEnvio.toDateString())) {
                         enviarHoy = true;
                     }
                     break;
                 case 'semanal':
-                    // Si hoy es posterior al día de envío original y coincide el día de la semana
-                    if (hoy >= fechaEnvioOriginal && hoy.getDay() === fechaEnvioOriginal.getDay()) {
+                    const diasDesdeUltimoEnvio = ultimoEnvio ? (hoy - ultimoEnvio) / (1000 * 60 * 60 * 24) : 8;
+                    if (hoy >= fechaEnvioOriginal && hoy.getDay() === fechaEnvioOriginal.getDay() && diasDesdeUltimoEnvio > 6) {
                         enviarHoy = true;
                     }
                     break;
                 case 'mensual':
-                    // Si hoy es posterior y coincide el día del mes
-                    if (hoy >= fechaEnvioOriginal && hoy.getDate() === fechaEnvioOriginal.getDate()) {
+                     if (hoy >= fechaEnvioOriginal && hoy.getDate() === fechaEnvioOriginal.getDate() && (!ultimoEnvio || ultimoEnvio.getMonth() !== hoy.getMonth())) {
                         enviarHoy = true;
                     }
                     break;
                 case 'anual':
-                    // Si hoy es posterior a la fecha de envío original,
-                    // y coincide el mes y el día, se debe enviar.
-                    if (hoy >= fechaEnvioOriginal && 
-                        hoy.getMonth() === fechaEnvioOriginal.getMonth() && 
-                        hoy.getDate() === fechaEnvioOriginal.getDate()) {
+                     if (hoy >= fechaEnvioOriginal && hoy.getDate() === fechaEnvioOriginal.getDate() && hoy.getMonth() === fechaEnvioOriginal.getMonth() && (!ultimoEnvio || ultimoEnvio.getFullYear() !== hoy.getFullYear())) {
                         enviarHoy = true;
                     }
                     break;
-                }
+            }
 
             if (!enviarHoy) {
-                 //console.log("[DEBUG]   -> DECISIÓN: No enviar hoy.");
+                 console.log("[DEBUG]   -> DECISIÓN: No enviar hoy.");
             }
 
             if (enviarHoy) {            
@@ -627,17 +617,37 @@ app.post('/api/contactos', async (req, res) => {
     }
 });
 
-app.post('/api/acontecimientos/:id/reset_recordatorio', async (req, res) => {
+// --- Endpoint para ENVIAR un recordatorio manualmente ---
+app.post('/api/acontecimientos/:id/enviar_ahora', async (req, res) => {
     const conn = await pool.getConnection();
     try {
-        const { id } = req.params;
+        const { id } = req.params; // ID del acontecimiento
+        await conn.beginTransaction();
+
+        // 1. Buscamos todos los datos necesarios
+        const [acontecimientos] = await conn.execute('SELECT * FROM acontecimientos WHERE id = ?', [id]);
+        if (acontecimientos.length === 0) {
+            return res.status(404).json({ error: 'Acontecimiento no encontrado.' });
+        }
+        const acontecimiento = acontecimientos[0];
+
+        const [expedientes] = await conn.execute('SELECT * FROM expedientes WHERE id = ?', [acontecimiento.expediente_id]);
+        const [fotos] = await conn.execute('SELECT * FROM fotos WHERE acontecimiento_id = ?', [acontecimiento.id]);
+
+        // 2. Enviamos el correo inmediatamente
+        await enviarCorreoRecordatorio(acontecimiento, expedientes[0], fotos);
+
+        // 3. Actualizamos la fecha del último envío
         await conn.execute(
-            'UPDATE acontecimientos SET recordatorio_enviado_el = NULL WHERE id = ?',
+            'UPDATE acontecimientos SET recordatorio_enviado_el = NOW() WHERE id = ?',
             [id]
         );
-        res.status(200).json({ mensaje: 'Recordatorio reseteado. Se volverá a enviar.' });
+
+        await conn.commit();
+        res.status(200).json({ mensaje: 'Recordatorio enviado manualmente.' });
     } catch (error) {
-        console.error("Error al resetear recordatorio:", error);
+        await conn.rollback();
+        console.error("Error al enviar recordatorio manual:", error);
         res.status(500).json({ error: 'Error interno del servidor.' });
     } finally {
         if (conn) conn.release();

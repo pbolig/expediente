@@ -436,19 +436,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fecha = new Date(acontecimiento.fecha_hora).toLocaleString('es-ES');
                 
                 let recordatorioHtml = '';
-                let botonRecordatorioHtml = ''; // Variable para el nuevo botón
+                let botonRecordatorioHtml = '';
 
                 if (acontecimiento.fecha_limite) {
                     const fechaLimite = new Date(acontecimiento.fecha_limite).toLocaleDateString('es-ES');
+                    
+                    // --- LÓGICA RESTAURADA PARA LA ETIQUETA ---
                     if (acontecimiento.recordatorio_enviado_el) {
                         const fechaEnvio = new Date(acontecimiento.recordatorio_enviado_el).toLocaleDateString('es-ES');
                         recordatorioHtml = `<p class="recordatorio-status enviado">✔ Recordatorio enviado el ${fechaEnvio} (Límite: ${fechaLimite})</p>`;
-                        // Si ya se envió, mostramos el botón de resetear
-                        botonRecordatorioHtml = `<button class="btn btn-secondary btn-resetear-recordatorio" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">🔄 Resetear Recordatorio</button>`;
                     } else {
                         recordatorioHtml = `<p class="recordatorio-status pendiente">🔔 Recordatorio programado para el ${fechaLimite}</p>`;
-                        // Si está pendiente, podríamos añadir un botón de envío manual en el futuro
                     }
+
+                    // --- LÓGICA SIMPLIFICADA PARA EL BOTÓN ---
+                    const textoBoton = acontecimiento.recordatorio_enviado_el ? '🔔 Reenviar Ahora' : '🔔 Enviar Ahora';
+                    botonRecordatorioHtml = `<button class="btn btn-outline btn-enviar-recordatorio-manual" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">${textoBoton}</button>`;
                 }
 
                 div.innerHTML = `
@@ -465,7 +468,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="btn btn-outline btn-ver-archivos" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">📁 Ver Archivos</button>
                         <button class="btn btn-secondary btn-editar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}">✏️ Editar</button>
                         <button class="btn btn-danger btn-eliminar-acontecimiento" data-acontecimiento-id="${acontecimiento.id}" data-expediente-id="${expedienteId}">🗑️ Eliminar</button>
-                        ${botonRecordatorioHtml} </div>`;
+                        ${botonRecordatorioHtml}
+                    </div>`;
                 
                 grillaAcontecimientos.appendChild(div);
             });
@@ -787,22 +791,25 @@ console.log("Cantidad de fotos:", fotosTomadas.length);
         const expedienteId = boton.dataset.expedienteId;
 
         // Lógica para RESETEAR RECORDATORIO
-        if (boton.classList.contains('btn-resetear-recordatorio')) {
-            if (confirm("¿Estás seguro de que deseas resetear este recordatorio para que se vuelva a enviar?")) {
+        if (boton.classList.contains('btn-enviar-recordatorio-manual')) {
+            if (confirm("¿Estás seguro de que deseas enviar este recordatorio ahora mismo?")) {
                 try {
-                    const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}/reset_recordatorio`, { method: 'POST' });
+                    boton.disabled = true;
+                    boton.textContent = 'Enviando...';
+                    const response = await fetch(`${API_URL}/api/acontecimientos/${acontecimientoId}/enviar_ahora`, { method: 'POST' });
                     if (response.ok) {
-                        mostrarMensaje('Recordatorio reseteado.');
+                        mostrarMensaje('Recordatorio enviado.');
                         await mostrarAcontecimientos(expedienteId, 1);
                     } else {
-                        mostrarMensaje('Error al resetear el recordatorio.');
+                        mostrarMensaje('Error al enviar el recordatorio.');
                     }
                 } catch (error) {
-                    console.error("Error al resetear:", error);
+                    console.error("Error al enviar manualmente:", error);
                     mostrarMensaje("No se pudo conectar con el servidor.");
+                } finally {
+                    // El texto se restaura en el refresco de la lista
                 }
             }
-            return; // Detenemos la ejecución aquí para no continuar con los otros 'if'
         }
 
         // Lógica para VER ARCHIVOS
