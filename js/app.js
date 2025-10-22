@@ -3,7 +3,7 @@
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000' 
     : '';
-const APP_VERSION = '2.3.5';
+const APP_VERSION = '2.3.6';
 
 document.addEventListener('DOMContentLoaded', () => {
    
@@ -682,6 +682,29 @@ console.log("Cantidad de fotos:", fotosTomadas.length);
             ocultarSpinner();
         }
     };
+
+    // --- FUNCIÓN PARA MANEJAR ENLACES DIRECTOS ---
+    const manejarEnlaceDirecto = async () => {
+        // Comprobamos si hay un "hash" en la URL (ej: #expediente=5)
+        if (window.location.hash) {
+            // Usamos URLSearchParams para leer los parámetros fácilmente
+            const params = new URLSearchParams(window.location.hash.substring(1)); // Quitamos el '#'
+            const expedienteId = params.get('expediente');
+
+            if (expedienteId) {
+                console.log('Enlace directo detectado. Abriendo expediente:', expedienteId);
+
+                // Ocultamos las vistas principales y mostramos la de edición
+                panelConsulta.style.display = 'none';
+                registroExpedienteSection.style.display = 'none';
+                panelEdicion.style.display = 'block';
+
+                // Cargamos los datos del expediente
+                await cargarExpedienteParaEdicion(expedienteId);
+                await mostrarAcontecimientos(expedienteId, 1);
+            }
+        }
+    };
     
     // --- 5. EVENT LISTENERS ---
     document.getElementById('app-version').textContent = APP_VERSION;
@@ -972,8 +995,18 @@ console.log("Cantidad de fotos:", fotosTomadas.length);
     window.addEventListener('click', (event) => { if (event.target === modalFotos) modalFotos.style.display = 'none'; });
 
     // --- 6. INICIALIZACIÓN ---
-    cargarFiltroEstados();
-    cargarOpcionesTipoTramite(choicesTipoTramite, 'Todos los Tipos');
-    cargarOpcionesTipoTramite(choicesFormularioTramite, 'Seleccione un tipo...');
-    //resetApp();
+    const inicializarApp = async () => {
+        cargarFiltroEstados();
+        await cargarOpcionesTipoTramite(choicesTipoTramite, 'Todos los Tipos');
+        await cargarOpcionesTipoTramite(choicesFormularioTramite, 'Seleccione un tipo...');
+
+        // Comprobamos si venimos de un enlace directo
+        if (window.location.hash) {
+            await manejarEnlaceDirecto();
+        } else {
+            // Si no, cargamos la app normalmente
+            resetApp();
+        }
+    };
+    inicializarApp();
 });
