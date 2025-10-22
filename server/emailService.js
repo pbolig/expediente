@@ -36,9 +36,7 @@ async function enviarCorreoRecordatorio(acontecimiento, expediente, fotos) {
 
         const isProduction = process.env.NODE_ENV === 'production';
 
-        const baseURL = isProduction 
-            ? 'https://expe.accesovirtual.com.ar' 
-            : 'https://expe.accesovirtual.com.ar';
+        const baseURL = 'https://expe.accesovirtual.com.ar';
 
         const linkDirecto = `${baseURL}/#expediente=${expediente.id}`;
 

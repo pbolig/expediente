@@ -3,7 +3,7 @@
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000' 
     : '';
-const APP_VERSION = '2.3.6';
+const APP_VERSION = '2.3.7';
 
 document.addEventListener('DOMContentLoaded', () => {
    
