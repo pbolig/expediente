@@ -38,7 +38,7 @@ async function enviarCorreoRecordatorio(acontecimiento, expediente, fotos) {
 
         const baseURL = isProduction 
             ? 'https://expe.accesovirtual.com.ar' 
-            : 'http://localhost:3000';
+            : 'https://expe.accesovirtual.com.ar';
 
         const linkDirecto = `${baseURL}/#expediente=${expediente.id}`;
 
