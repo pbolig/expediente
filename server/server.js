@@ -457,7 +457,7 @@ app.get('/api/tramites/:id', async (req, res) => {
 app.put('/api/acontecimientos/:id', handleUpload, async (req, res) => {
     const conn = await pool.getConnection();
     try {
-        const { id } = req.params;
+        const { id } = req.params; // ID del acontecimiento a editar
         const { 
             descripcionAcontecimiento, 
             nuevoEstado, 
@@ -465,10 +465,11 @@ app.put('/api/acontecimientos/:id', handleUpload, async (req, res) => {
             frecuenciaRecordatorio, 
             destinatariosEmail 
         } = req.body;
+        const fotos = req.files; // Ahora SÍ recibimos archivos
 
         await conn.beginTransaction();
 
-        // Actualizamos el acontecimiento
+        // 1. Actualizamos los datos de texto del acontecimiento
         await conn.execute(
             'UPDATE acontecimientos SET descripcion = ?, nuevo_estado = ?, fecha_limite = ?, frecuencia_recordatorio = ?, destinatario_email = ? WHERE id = ?',
             [
@@ -481,7 +482,38 @@ app.put('/api/acontecimientos/:id', handleUpload, async (req, res) => {
             ]
         );
 
-        // Aquí podrías añadir lógica para manejar nuevos archivos adjuntos en una edición si quisieras
+        // 2. Si se subieron nuevos archivos, los procesamos
+        if (fotos && fotos.length > 0) {
+            // Obtenemos los datos del expediente necesarios para nombrar los archivos
+            const [acontecimientoData] = await conn.execute('SELECT expediente_id FROM acontecimientos WHERE id = ?', [id]);
+            const expedienteId = acontecimientoData[0].expediente_id;
+            const [expedienteData] = await conn.execute('SELECT numero_expediente FROM expedientes WHERE id = ?', [expedienteId]);
+            const numeroExpediente = expedienteData[0].numero_expediente;
+
+            const fechaHora = new Date();
+            const year = fechaHora.getFullYear().toString();
+            const month = (fechaHora.getMonth() + 1).toString().padStart(2, '0');
+            const day = fechaHora.getDate().toString().padStart(2, '0');
+            const datePath = path.join(year, month, day);
+            const fullDateDirPath = path.join(uploadsDir, datePath);
+            fs.mkdirSync(fullDateDirPath, { recursive: true });
+
+            for (let i = 0; i < fotos.length; i++) {
+                const foto = fotos[i];
+                // Creamos un nombre único usando la fecha y hora actual para evitar colisiones
+                const uniqueSuffix = `${id}-${Date.now()}-${i + 1}${path.extname(foto.originalname)}`;
+                const baseFilename = `${numeroExpediente}-${uniqueSuffix}`;
+                const nombreArchivoConRuta = path.join(datePath, baseFilename);
+                const rutaAbsolutaArchivo = path.join(uploadsDir, nombreArchivoConRuta);
+
+                fs.writeFileSync(rutaAbsolutaArchivo, foto.buffer);
+
+                await conn.execute(
+                    'INSERT INTO fotos (expediente_id, acontecimiento_id, nombre_archivo, ruta_archivo) VALUES (?, ?, ?, ?)',
+                    [expedienteId, id, nombreArchivoConRuta, rutaAbsolutaArchivo]
+                );
+            }
+        }
 
         await conn.commit();
         res.status(200).json({ mensaje: 'Acontecimiento actualizado con éxito.' });

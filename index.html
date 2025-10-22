@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expedientes</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📁</text></svg>">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/choices.min.css"/>
@@ -21,8 +22,19 @@
             <form id="formulario-expediente">
                 <div class="campo-form"><label for="tipo-tramite">Tipo de Trámite:</label><select id="tipo-tramite"></select></div>
                 <div class="campo-form"><div class="campo-con-icono"><label for="descripcion">Descripción:</label><button type="button" id="btn-reconocimiento-voz" class="btn-microfono" title="Convertir voz a texto">🎤</button></div><textarea id="descripcion" rows="5" placeholder="Descripción detallada..." required></textarea></div>
-                <div class="campo-form"><label>Documentación:</label><div id="fotos-container"><button type="button" id="btn-tomar-foto" class="btn btn-outline">Adjuntar Archivo</button><input type="file" id="input-foto" multiple style="display: none;"></div><div id="fotos-previsualizacion"></div></div>
-                <div class="form-actions"><button type="submit" id="btn-guardar" class="btn btn-primary">Guardar Expediente</button></div>
+                
+                <div class="campo-form">
+                    <label>Documentación:</label>
+                    <div id="fotos-container">
+                        <button type="button" id="btn-tomar-foto" class="btn btn-outline">Adjuntar Archivo</button>
+                        <input type="file" id="input-foto" multiple style="display: none;">
+                    </div>
+                    <div id="fotos-previsualizacion"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" id="btn-guardar" class="btn btn-primary">Guardar Expediente</button>
+                </div>
+
             </form>
         </section>
 
@@ -93,6 +105,11 @@
                 </div>
             </div>
         </section>
+
+    <div id="spinner-overlay" class="spinner-overlay" style="display: none;">
+            <div class="spinner"></div>
+    </div>
+
     </main>
     <footer><p>© 2025 Expedientes ISET57 | Versión: <span id="app-version"></span></p></footer>
     <div id="modal-fotos" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h2>Fotos / Archivos</h2><div id="fotos-modal-body"></div></div></div>
@@ -104,6 +121,6 @@
     <script src="js/components/AutocompleteTagger.js"></script>
     <script src="js/components/ReminderComponent.js"></script>
     <script src="js/app.js"></script>
-    <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/js/service-worker.js').then(reg=>console.log('SW ok',reg)).catch(err=>console.error('SW err',err));});}</script>
+    <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/service-worker.js').then(reg=>console.log('SW ok',reg)).catch(err=>console.error('SW err',err));});}</script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'expedientes-cache-v1';
+const CACHE_NAME = 'expedientes-cache-v10';
 const urlsToCache = [
     '/',
     '/index.html',

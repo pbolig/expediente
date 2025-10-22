@@ -3,7 +3,7 @@
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000' 
     : '';
-const APP_VERSION = '2.0.1';
+const APP_VERSION = '2.3.5';
 
 document.addEventListener('DOMContentLoaded', () => {
    
@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelarModalContacto = document.getElementById('btn-cancelar-modal-contacto');
     const closeBtnContacto = document.querySelector('#modal-contacto .close-btn-contacto');
     const accordionTitle = document.getElementById('accordion-title');
+    const spinnerOverlay = document.getElementById('spinner-overlay');
 
 
 
@@ -234,6 +235,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Programación del spinner de espera 
+    let spinnerStartTime = 0;
+    const MIN_SPINNER_TIME = 500; // Medio segundo
+
+    const mostrarSpinner = () => {
+        spinnerStartTime = Date.now();
+        spinnerOverlay.style.display = 'flex';
+    };
+
+    const ocultarSpinner = () => {
+        const elapsedTime = Date.now() - spinnerStartTime;
+        const remainingTime = MIN_SPINNER_TIME - elapsedTime;
+        
+        if (remainingTime > 0) {
+            setTimeout(() => {
+                spinnerOverlay.style.display = 'none';
+            }, remainingTime);
+        } else {
+            spinnerOverlay.style.display = 'none';
+        }
+    };
+
     const descargarArchivo = async (nombreArchivo) => {
         try {
             const response = await fetch(`${API_URL}/uploads/${nombreArchivo}`);
@@ -346,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const buscarExpedientes = async (termino, estado, tipoTramite, page = 1) => {
+        mostrarSpinner();
         try {
             let url = `${API_URL}/api/tramites?busqueda=${encodeURIComponent(termino)}&page=${page}`;
             if (estado) url += `&estado=${estado}`;
@@ -360,6 +384,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error de red:', error);
             resultadosBusqueda.innerHTML = '<p>No se pudo conectar con el servidor.</p>';
+        } finally {
+            ocultarSpinner();
         }
     };
 
@@ -553,6 +579,7 @@ console.log("Tipo de Trámite:", tipoTramite);
 console.log("Descripción:", descripcion);
 console.log("Cantidad de fotos:", fotosTomadas.length);
         
+        mostrarSpinner();
         try {
             const response = await fetch(`${API_URL}/api/tramites`, { method: 'POST', body: formData });
             if (response.ok) {
@@ -572,6 +599,8 @@ console.log("Cantidad de fotos:", fotosTomadas.length);
             console.error('Error de red:', error);
             //alert('No se pudo conectar con el servidor.');
             mostrarMensaje('No se pudo conectar con el servidor.');
+        } finally {
+            ocultarSpinner();
         }
     };
 
@@ -581,75 +610,66 @@ console.log("Cantidad de fotos:", fotosTomadas.length);
         const editingId = document.getElementById('editing-acontecimiento-id').value;
         const esEdicion = !!editingId;
         const expedienteId = expedienteIdEdicion.value;
-
-        // --- BLOQUE DE VALIDACIÓN ---
+        
+        // --- VALIDACIÓN DE RECORDATORIO ---
         if (checkFechaLimite.checked) {
             if (!fechaLimiteInput.value) {
                 mostrarMensaje('Por favor, seleccione una fecha límite para el recordatorio.');
-                return; // Detiene el guardado
+                return;
             }
             if (taggerDestinatarios.getValue().length === 0) {
                 mostrarMensaje('Por favor, añada al menos un destinatario para el recordatorio.');
-                return; // Detiene el guardado
+                return;
             }
         }
-
 
         const numeroExpediente = document.querySelector('#panel-edicion .panel-header h2').textContent.split(': ')[1];
-
-        let body;
-        let headers = {};
-        const method = esEdicion ? 'PUT' : 'POST';
-        const url = esEdicion ? `${API_URL}/api/acontecimientos/${editingId}` : `${API_URL}/api/acontecimientos/${expedienteId}`;
-
-        // Obtenemos los datos de los campos
-        const descripcionAcontecimiento = descripcionEdicion.value;
-        const nuevoEstado = document.querySelector('input[name="estado-toggle"]:checked').value;
-        const reminderData = reminderComponent.getValue();
-
-        if (esEdicion) {
-            // --- MODO EDICIÓN: Enviamos como JSON ---
-            headers['Content-Type'] = 'application/json';
-            const data = {
-                descripcionAcontecimiento,
-                nuevoEstado,
-                fechaLimite: reminderData.fechaLimite || null,
-                frecuenciaRecordatorio: reminderData.frecuencia || 'unico',
-                destinatariosEmail: JSON.stringify(reminderData.destinatarios)
-            };
-            body = JSON.stringify(data);
-            // NOTA: La edición de archivos adjuntos no está implementada en este flujo.
-
-        } else {
-            // --- MODO CREACIÓN: Enviamos como FormData ---
-            const formData = new FormData();
-            formData.append('descripcionAcontecimiento', descripcionAcontecimiento);
-            formData.append('nuevoEstado', nuevoEstado);
-            formData.append('numeroExpediente', numeroExpediente);
-
-            if (reminderData.fechaLimite) {
-                formData.append('fechaLimite', reminderData.fechaLimite);
-                formData.append('frecuenciaRecordatorio', reminderData.frecuencia);
-                if (reminderData.destinatarios.length > 0) {
-                    formData.append('destinatariosEmail', JSON.stringify(reminderData.destinatarios));
-                }
-            }
-            
-            fotosEdicion.forEach((foto, index) => formData.append(`foto-${index}`, foto));
-            body = formData;
+        if (!numeroExpediente && !esEdicion) { // El numeroExpediente es vital solo en la creación
+            mostrarMensaje("Error: No se pudo leer el número de expediente.");
+            return;
         }
 
+        // --- AHORA SIEMPRE USAREMOS FormData ---
+        const formData = new FormData();
+        const reminderData = reminderComponent.getValue();
+
+        // 1. Añadimos los datos de texto
+        formData.append('descripcionAcontecimiento', descripcionEdicion.value);
+        formData.append('nuevoEstado', document.querySelector('input[name="estado-toggle"]:checked').value);
+        
+        if (reminderData.fechaLimite) {
+            formData.append('fechaLimite', reminderData.fechaLimite);
+            formData.append('frecuenciaRecordatorio', reminderData.frecuencia);
+            if (reminderData.destinatarios.length > 0) {
+                formData.append('destinatariosEmail', JSON.stringify(reminderData.destinatarios));
+            }
+        } else {
+            formData.append('fechaLimite', '');
+            formData.append('frecuenciaRecordatorio', '');
+            formData.append('destinatariosEmail', '[]');
+        }
+
+        // 2. Añadimos los archivos (fotosEdicion es el array de previsualización)
+        fotosEdicion.forEach((foto, index) => {
+            formData.append(`foto-${index}`, foto);
+        });
+
+        // 3. Definimos el método y la URL
+        const method = esEdicion ? 'PUT' : 'POST';
+        const url = esEdicion ? `${API_URL}/api/acontecimientos/${editingId}` : `${API_URL}/api/acontecimientos/${expedienteId}`;
+        
+        if (!esEdicion) {
+            formData.append('numeroExpediente', numeroExpediente);
+        }
+        
+        mostrarSpinner();
         try {
-            const response = await fetch(url, { method, headers, body });
+            // No se necesita 'headers', FormData lo establece automáticamente
+            const response = await fetch(url, { method, body: formData });
+
             if (response.ok) {
                 mostrarMensaje(`Acontecimiento ${esEdicion ? 'actualizado' : 'guardado'} con éxito.`);
-                resetearFormularioAcontecimiento();
-                document.getElementById('editing-acontecimiento-id').value = '';
-                reminderComponent.clear();
-                fotosPrevisualizacionEdicion.innerHTML = '';
-                fotosEdicion.length = 0;
-                if (accordionHeader.classList.contains('active')) accordionHeader.click();
-                resetearFormularioAcontecimiento(); 
+                resetearFormularioAcontecimiento(); // Limpia y cierra el acordeón
                 await mostrarAcontecimientos(expedienteId, 1);
             } else {
                 const errorData = await response.json();
@@ -658,6 +678,8 @@ console.log("Cantidad de fotos:", fotosTomadas.length);
         } catch (error) {
             console.error('Error de red:', error);
             mostrarMensaje('No se pudo conectar con el servidor.');
+        } finally {
+            ocultarSpinner();
         }
     };
     
