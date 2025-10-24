@@ -141,3 +141,74 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* --- Estilos para la Descripción Renderizada con Markdown --- */
+
+.descripcion-renderizada {
+    margin-top: -0.5rem; /* Ajusta el espacio después del título "Descripción:" */
+    line-height: 1.6;
+}
+
+/* Estilos para los elementos que genera Markdown */
+.descripcion-renderizada p {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.descripcion-renderizada ul,
+.descripcion-renderizada ol {
+    padding-left: 20px;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.descripcion-renderizada li {
+    margin-bottom: 0.25rem;
+}
+
+.descripcion-renderizada strong {
+    color: #333; /* Un poco más de énfasis */
+}
+
+
+/* --- Estilos para el Botón de Ayuda y Modal Markdown --- */
+
+.btn-ayuda {
+    background-color: #e9ecef;
+    color: #495057;
+    border: 1px solid #ced4da;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    line-height: 22px; /* Centrado vertical */
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.btn-ayuda:hover {
+    background-color: #ced4da;
+}
+
+.markdown-ayuda-lista {
+    list-style: none;
+    padding-left: 0;
+}
+
+.markdown-ayuda-lista li {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+.markdown-ayuda-lista code {
+    background: #e9ecef;
+    color: #c7254e;
+    padding: 2px 4px;
+    border-radius: 3px;
+}

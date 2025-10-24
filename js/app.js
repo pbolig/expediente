@@ -3,9 +3,11 @@
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000' 
     : '';
-const APP_VERSION = '2.3.7';
+const APP_VERSION = '2.3.8';
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    marked.setOptions({ breaks: true });
    
     // --- 1. REFERENCIAS A ELEMENTOS DEL DOM ---
     const btnHome = document.getElementById('btn-home');
@@ -60,6 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtnContacto = document.querySelector('#modal-contacto .close-btn-contacto');
     const accordionTitle = document.getElementById('accordion-title');
     const spinnerOverlay = document.getElementById('spinner-overlay');
+    const modalAyudaMarkdown = document.getElementById('modal-ayuda-markdown');
+    const btnAyudaMarkdown1 = document.getElementById('btn-ayuda-markdown-1');
+    const btnAyudaMarkdown2 = document.getElementById('btn-ayuda-markdown-2');
+    const closeBtnAyuda = document.querySelector('.close-btn-ayuda');
 
 
 
@@ -400,7 +406,8 @@ document.addEventListener('DOMContentLoaded', () => {
         data.expedientes.forEach(expediente => {
             const expedienteDiv = document.createElement('div');
             expedienteDiv.classList.add('expediente-item');
-            expedienteDiv.innerHTML = `<h3>Nro. Expediente: ${expediente.numero_expediente}</h3><p><strong>Fecha:</strong> ${new Date(expediente.fecha_creacion).toLocaleDateString()}</p><p><strong>Descripción:</strong> ${expediente.descripcion}</p><p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p><p><strong>Estado:</strong> ${expediente.estado}</p><button class="btn btn-outline btn-ver-acontecimientos" data-expediente-id="${expediente.id}">Ver Detalles</button>`;
+            //expedienteDiv.innerHTML = `<h3>Nro. Expediente: ${expediente.numero_expediente}</h3><p><strong>Fecha:</strong> ${new Date(expediente.fecha_creacion).toLocaleDateString()}</p><p><strong>Descripción:</strong>${expediente.descripcion}</p><p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p><p><strong>Estado:</strong> ${expediente.estado}</p><button class="btn btn-outline btn-ver-acontecimientos" data-expediente-id="${expediente.id}">Ver Detalles</button>`;
+            expedienteDiv.innerHTML = `<h3>Nro. Expediente: ${expediente.numero_expediente}</h3><p><strong>Fecha:</strong> ${new Date(expediente.fecha_creacion).toLocaleDateString()}</p><p><strong>Descripción:</strong></p><div class="descripcion-renderizada">${marked.parse(expediente.descripcion)}</div><p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p><p><strong>Estado:</strong> ${expediente.estado}</p><button class="btn btn-outline btn-ver-acontecimientos" data-expediente-id="${expediente.id}">Ver Detalles</button>`;
             resultadosBusqueda.appendChild(expedienteDiv);
         });
         if (data.total_pages > 1) {
@@ -431,8 +438,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const expediente = await response.json();
                 document.querySelector('#panel-edicion .panel-header h2').textContent = `Detalles del Expediente: ${expediente.numero_expediente}`;
                 expedienteIdEdicion.value = expediente.id;
-                document.getElementById('info-expediente-general').innerHTML = `<p><strong>Descripción General:</strong> ${expediente.descripcion}</p><p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p><hr>`;
-                
+                //document.getElementById('info-expediente-general').innerHTML = `<p><strong>Descripción General:</strong> ${expediente.descripcion}</p><p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p><hr>`;
+                document.getElementById('info-expediente-general').innerHTML = `<p><strong>Descripción General:</strong></p><div class="descripcion-renderizada">${marked.parse(expediente.descripcion)}</div><p><strong>Tipo de Trámite:</strong> ${expediente.tipo_tramite_nombre}</p><hr>`;
+
                 const radioActivo = document.querySelector(`input[name="estado-toggle"][value="${expediente.estado}"]`);
                 if (radioActivo) {
                     radioActivo.checked = true;
@@ -486,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="fecha">${fecha}</span>
                     </div>
                     <div class="acontecimiento-content">
-                        <p><strong>Descripción:</strong> ${acontecimiento.descripcion || 'N/A'}</p>
+                        <p><strong>Descripción:</strong></p><div class="descripcion-renderizada">${marked.parse(acontecimiento.descripcion || 'N/A')}</div>
                         <p><strong>Estado:</strong> ${acontecimiento.nuevo_estado || 'N/A'}</p>
                         ${recordatorioHtml}
                     </div>
@@ -718,6 +726,14 @@ console.log("Cantidad de fotos:", fotosTomadas.length);
         btnMostrarFormulario.classList.toggle('btn-primary', !isHidden);
         btnMostrarFormulario.classList.toggle('btn-secondary', isHidden);
     });
+
+    // --- Lógica para el Modal de Ayuda Markdown ---
+    const abrirModalAyuda = () => modalAyudaMarkdown.style.display = 'block';
+    const cerrarModalAyuda = () => modalAyudaMarkdown.style.display = 'none';
+
+    btnAyudaMarkdown1.addEventListener('click', abrirModalAyuda);
+    btnAyudaMarkdown2.addEventListener('click', abrirModalAyuda);
+    closeBtnAyuda.addEventListener('click', cerrarModalAyuda);
     
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

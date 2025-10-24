@@ -21,7 +21,14 @@
             <h2>Registrar Nuevo Expediente</h2>
             <form id="formulario-expediente">
                 <div class="campo-form"><label for="tipo-tramite">Tipo de Trámite:</label><select id="tipo-tramite"></select></div>
-                <div class="campo-form"><div class="campo-con-icono"><label for="descripcion">Descripción:</label><button type="button" id="btn-reconocimiento-voz" class="btn-microfono" title="Convertir voz a texto">🎤</button></div><textarea id="descripcion" rows="5" placeholder="Descripción detallada..." required></textarea></div>
+                
+                <div class="campo-form">
+                    <div class="campo-con-icono">
+                        <label for="descripcion">Descripción:</label>
+                        <button type="button" id="btn-ayuda-markdown-1" class="btn-ayuda">?</button> <button type="button" id="btn-reconocimiento-voz" ...>🎤</button>
+                    </div>
+                        <textarea id="descripcion" rows="5" placeholder="Descripción detallada..." required></textarea>
+                    </div>
                 
                 <div class="campo-form">
                     <label>Documentación:</label>
@@ -65,7 +72,14 @@
                     <form id="formulario-edicion">
                         <input type="hidden" id="expediente-id-edicion">
                         <input type="hidden" id="editing-acontecimiento-id">
-                        <div class="campo-form"><label for="descripcion-edicion">Agregar descripción:</label><textarea id="descripcion-edicion" name="descripcionAcontecimiento" rows="3" required></textarea></div>
+                        
+                        <div class="campo-form">
+                            <div class="campo-con-icono"> 
+                                <label for="descripcion-edicion">Agregar descripción:</label>
+                                <button type="button" id="btn-ayuda-markdown-2" class="btn-ayuda">?</button> </div>
+                            <textarea id="descripcion-edicion" ...></textarea>
+                        </div>
+                        
                         <div class="campo-form"><label>Documentación Adicional:</label><div id="fotos-container-edicion"><button type="button" id="btn-adjuntar-edicion" class="btn btn-outline">Adjuntar Archivo</button><input type="file" id="input-foto-edicion" multiple style="display: none;"></div><div id="fotos-previsualizacion-edicion"></div></div>
                         
                         <div id="contenedor-recordatorio">
@@ -110,6 +124,25 @@
             <div class="spinner"></div>
     </div>
 
+    <div id="modal-ayuda-markdown" class="modal">
+        <div class="modal-content">
+            <span class="close-btn-ayuda close-btn">&times;</span>
+            <h2>Formato de Texto (Markdown)</h2>
+            <p>Puedes usar estos caracteres para dar formato a tu texto:</p>
+            <ul class="markdown-ayuda-lista">
+                <li><code>**negrita**</code> ➔ **negrita**</li>
+                <li><code>*itálica*</code> ➔ <i>itálica</i></li>
+                <li><code>- Item 1</code><br><code>- Item 2</code> ➔ 
+                    <ul>
+                        <li>Item 1</li>
+                        <li>Item 2</li>
+                    </ul>
+                </li>
+                <li><small>Los saltos de línea simples (presionar Enter) también se respetarán.</small></li>
+            </ul>
+        </div>
+    </div>
+
     </main>
     <footer><p>© 2025 Expedientes ISET57 | Versión: <span id="app-version"></span></p></footer>
     <div id="modal-fotos" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h2>Fotos / Archivos</h2><div id="fotos-modal-body"></div></div></div>
@@ -120,6 +153,7 @@
     <script src="js/image-compression.js"></script>
     <script src="js/components/AutocompleteTagger.js"></script>
     <script src="js/components/ReminderComponent.js"></script>
+    <script src="js/marked.min.js"></script>
     <script src="js/app.js"></script>
     <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/service-worker.js').then(reg=>console.log('SW ok',reg)).catch(err=>console.error('SW err',err));});}</script>
 </body>

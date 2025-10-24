@@ -7,6 +7,29 @@ const fs = require('fs');
 const cron = require('node-cron');
 const { enviarCorreoRecordatorio } = require('./emailService');
 
+// --- FUNCIÓN AUXILIAR PARA OBTENER EL TIMESTAMP DE ARGENTINA ---
+function getArgentinaTimestamp() {
+    const date = new Date();
+    const options = {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false // Formato 24 horas
+    };
+
+    // Usamos 'sv-SE' (Sueco) porque nos da el formato "YYYY-MM-DD HH:mm:ss"
+    const formatter = new Intl.DateTimeFormat('sv-SE', options);
+    const formattedDate = formatter.format(date); // Ej: "2025-10-23 20:52:45"
+    
+    // Ahora solo limpiamos los caracteres y añadimos la 'T'
+    // El resultado será "20251023T205245"
+    return formattedDate.replace(/-/g, '').replace(/:/g, '').replace(' ', 'T');
+}
+
 // --- FUNCIÓN AUXILIAR PARA CALCULAR DÍAS HÁBILES ---
 function addBusinessDays(startDate, days) {
     let date = new Date(startDate);
@@ -177,7 +200,7 @@ app.post('/api/tramites', upload.any(), async (req, res) => {
         }
 
         const fechaHora = new Date();
-        const numeroExpediente = fechaHora.toISOString().replace(/[-:.]/g, '').slice(0, 14);
+        const numeroExpediente = getArgentinaTimestamp(); // El N° de Expediente con hora local
 
         const [expedienteResult] = await conn.execute(
             'INSERT INTO expedientes (numero_expediente, fecha_creacion, descripcion, tipo_tramite_id, estado) VALUES (?, ?, ?, ?, ?)',
